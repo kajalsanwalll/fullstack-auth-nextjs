@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import axios, { Axios } from 'axios';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 
 export default function LoginPage (){
@@ -23,8 +23,7 @@ export default function LoginPage (){
             const response = await axios.post("/api/users/login", user);
 
             console.log("Login success!", response.data);
-            toast.success("Login success!")
-            router.push("/profile")
+            router.push("/profile");
             
         } catch (error:any) {
             console.log("Login failed", error.message);
@@ -69,6 +68,7 @@ export default function LoginPage (){
             ></input>
 
             <button 
+             type="button"
             onClick={onLogin}
             className='p-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-gray-600'
             >Submit!</button>

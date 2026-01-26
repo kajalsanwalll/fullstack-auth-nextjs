@@ -32,6 +32,8 @@ export async function POST(request: NextRequest){
                 {status:400}
             )
         }
+                console.log(user);
+
 
         //create token data
         const tokenData = {
