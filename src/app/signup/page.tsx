@@ -35,7 +35,8 @@ export default function SignupPage (){
         } catch (error:any) {
             console.log("Signup failed!", error.message);
 
-            toast.error(error.message);
+            toast.error(error.response?.data?.error || "Signup failed");
+            
         }finally{
             setLoading(false);
         }
@@ -74,10 +75,15 @@ export default function SignupPage (){
             placeholder='password'
             ></input>
 
-            <button 
-            onClick={onSignup}
-            className='p-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-gray-600'>
-                {buttonDisabled ? "Duh, fillup!" : "Signup!"}</button>
+            <button
+               onClick={onSignup}
+               disabled={buttonDisabled || loading}
+               className={`p-2 border border-gray-300 rounded-lg mb-4
+              ${buttonDisabled || loading ? "opacity-50 cursor-not-allowed" : ""}`}
+               >
+               {loading ? "Processing..." : "Signup!"}
+              </button>
+
             <Link href="/login">Visit login page!</Link>
 
 

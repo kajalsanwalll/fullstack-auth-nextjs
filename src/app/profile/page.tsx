@@ -35,20 +35,17 @@ export default function ProfilePage(){
             <h1>Profile</h1>
             <hr></hr>
             <p>Profile page</p>
-            <h2 className="p-3 rounded-lg bg-green-500">{data === 'nothing' ? "Nothing" : <Link 
-              href={`/profile/${data}`}>{data}</Link>}</h2>
+            <h2 className="p-3 rounded-lg bg-green-500">{data === 'nothing' ? "Nothing" : <Link href={`/profile/${data}`}>{data}</Link>}</h2>
 
             <hr></hr>
             <button
             onClick={logout}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2
-            px-4 rounded-xl mt-4"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl mt-4"
             >Logout</button>
 
             <button
             onClick={getUserDetails}
-            className="bg-purple-900 hover:bg-blue-700 text-white font-bold py-2
-            px-4 rounded-xl mt-4"
+            className="bg-purple-900 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl mt-4"
             >Get user Info</button>
 
         </div>
