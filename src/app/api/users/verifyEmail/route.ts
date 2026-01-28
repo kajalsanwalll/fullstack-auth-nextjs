@@ -1,10 +1,6 @@
-export const runtime = "nodejs";
 import { connect } from "@/dbConfig/dbConfig";
 import { NextRequest, NextResponse } from "next/server";
 import User from "@/models/userModel";
-import { error } from "console";
-import { use } from "react";
-
 connect();
 
 
@@ -36,9 +32,6 @@ export async function POST(request: NextRequest){
             message: "Email verified successfully!",
             success: true
         })
-        
-        
-
 
     } catch (error:any) {
         return NextResponse.json({error: error.message,
