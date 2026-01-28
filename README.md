@@ -12,7 +12,8 @@ Learning-focused fullstack authentication project built using **Next.js App Rout
 ##  Tech Stack
 - Next.js 14
 - TypeScript
-- MongoDB (planned)
+- MongoDB
+- Mailtrap
 - App Router & Server Components
 
 ##  Status
