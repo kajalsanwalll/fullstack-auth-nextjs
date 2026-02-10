@@ -1,29 +1,39 @@
-# Fullstack Auth – Next.js
+# 📝 Notes App – Full Stack Next.js
 
-Learning-focused fullstack authentication project built using **Next.js App Router**.
+A modern full-stack notes application built with **Next.js 16**, **MongoDB**, and **JWT authentication**.  
+Users can securely create, manage, and share notes with a clean, Vercel-style UI.
 
-##  Features (WIP)
-- Next.js App Router structure
-- Login & Signup pages
-- Dynamic profile routes (`/profile/[id]`)
-- API routes for user authentication
-- Database configuration setup
+---
 
-##  Tech Stack
-- Next.js 14
-- TypeScript
-- MongoDB
-- Mailtrap
-- App Router & Server Components
+## ✨ Features
 
-##  Status
-This project is actively under development while learning fullstack authentication and Next.js best practices.
+- 🔐 Authentication (Signup / Login / Logout)
+- 📝 Create, edit, delete notes
+- ⭐ Pin / unpin notes (pinned notes stay on top)
+- 🔍 Search notes instantly
+- 🔒 Private notes (default)
+- 🌍 Public notes (shareable via URL)
+- 🎨 Modern glassmorphism UI with purple glow
+- 📦 MongoDB Atlas + Mongoose
+- 🍪 JWT auth via HttpOnly cookies
 
-##  Getting Started
+---
 
-npm install
-npm run dev
+## 🛠 Tech Stack
 
-Open http://localhost:3000 in your browser to view the app.
+- **Frontend**: Next.js 16 (App Router), React, Tailwind CSS
+- **Backend**: Next.js API routes
+- **Database**: MongoDB Atlas
+- **Auth**: JWT + bcrypt
+- **Email**: Mailtrap (email verification)
+- **Deployment Ready**: Vercel
 
-This repository documents my learning journey and will be continuously improved with new features.
+---
+
+## 🚀 Getting Started
+
+### 1️⃣ Clone repo
+
+```bash
+git clone https://github.com/kajalsanwalll/fullstack-auth.git
+cd fullstack-auth

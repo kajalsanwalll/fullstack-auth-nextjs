@@ -5,17 +5,30 @@ import { getDataFromToken } from "@/helpers/getDataFromToken";
 
 connect();
 
+/* =======================
+   GET SINGLE NOTE
+   (public OR owner)
+======================= */
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params; // ✅ REQUIRED IN NEXT 16
-    const userId = getDataFromToken(request);
+    const { id } = await context.params;
+
+    let userId: string | null = null;
+    try {
+      userId = getDataFromToken(request);
+    } catch {
+      userId = null;
+    }
 
     const note = await Note.findOne({
       _id: id,
-      user: userId, // ✅ matches schema
+      $or: [
+        { isPublic: true },
+        { user: userId },
+      ],
     });
 
     if (!note) {
@@ -25,10 +38,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: note,
-    });
+    return NextResponse.json({ success: true, data: note });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
@@ -37,6 +47,43 @@ export async function GET(
   }
 }
 
+/* =======================
+   UPDATE NOTE (TITLE/CONTENT)
+======================= */
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const userId = getDataFromToken(request);
+    const { title, content } = await request.json();
+
+    const note = await Note.findOneAndUpdate(
+      { _id: id, user: userId },
+      { title, content },
+      { new: true }
+    );
+
+    if (!note) {
+      return NextResponse.json(
+        { error: "Note not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: note });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+/* =======================
+   DELETE NOTE
+======================= */
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -58,6 +105,40 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+/* =======================
+   PATCH (PIN / PUBLIC)
+======================= */
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const userId = getDataFromToken(request);
+    const body = await request.json();
+
+    const note = await Note.findOneAndUpdate(
+      { _id: id, user: userId },
+      body,
+      { new: true }
+    );
+
+    if (!note) {
+      return NextResponse.json(
+        { error: "Note not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: note });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },

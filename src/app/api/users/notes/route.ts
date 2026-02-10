@@ -23,16 +23,22 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET ALL NOTES
+// ✅ GET ALL NOTES FOR DASHBOARD
 export async function GET(request: NextRequest) {
   try {
     const userId = getDataFromToken(request);
 
-    const notes = await Note.find({ user: userId }) // ✅ FIX
-      .sort({ createdAt: -1 });
+    const notes = await Note.find({ user: userId }) // 🔥 FIX
+      .sort({ isPinned: -1, createdAt: -1 });
 
-    return NextResponse.json({ success: true, data: notes });
+    return NextResponse.json({
+      success: true,
+      data: notes,
+    });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
