@@ -17,11 +17,14 @@ type Note = {
 };
 
 type User = {
-  name: string;
+  username: string;
   email: string;
   avatar?: string;
 };
 
+/* ======================
+   COMPONENT
+====================== */
 export default function DashboardPage() {
   /* ======================
      STATE
@@ -33,8 +36,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [showProfile, setShowProfile] = useState(false);
 
-  // profile form (CONTROLLED ✅)
-  const [nameInput, setNameInput] = useState("");
+  // profile
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -48,10 +50,7 @@ export default function DashboardPage() {
       const res = await axios.get("/api/users/me", {
         withCredentials: true,
       });
-
-      const u = res.data.data;
-      setUser(u);
-      setNameInput(u.name || ""); // ✅ fallback
+      setUser(res.data.data);
     } catch {
       toast.error("Failed to load profile");
     }
@@ -114,22 +113,25 @@ export default function DashboardPage() {
   };
 
   /* ======================
-     UPDATE PROFILE
+     UPDATE PROFILE (AVATAR ONLY)
   ====================== */
   const saveProfile = async () => {
+    if (!avatarFile) {
+      toast("No changes to save");
+      return;
+    }
+
     try {
       setSavingProfile(true);
 
       const formData = new FormData();
-      formData.append("name", nameInput);
-      if (avatarFile) formData.append("avatar", avatarFile);
+      formData.append("avatar", avatarFile);
 
       await axios.patch("/api/users/profile", formData, {
         withCredentials: true,
       });
 
       toast.success("Profile updated");
-      setShowProfile(false);
       setAvatarFile(null);
       fetchUser();
     } catch {
@@ -202,7 +204,16 @@ export default function DashboardPage() {
     <div className="min-h-screen px-6 py-10 max-w-6xl mx-auto">
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Your Notes</h1>
+        <div>
+          <p className="text-sm opacity-70">
+            Hi,{" "}
+            <span className="font-medium text-purple-300">
+              {user?.username || "there"}
+            </span>{" "}
+            👋
+          </p>
+          <h1 className="text-3xl font-bold">Your Notes</h1>
+        </div>
 
         <div className="flex items-center gap-3">
           <Link
@@ -219,7 +230,6 @@ export default function DashboardPage() {
             + New Note
           </Link>
 
-          {/* PROFILE BUTTON */}
           <button
             onClick={() => setShowProfile(true)}
             className="w-10 h-10 rounded-full overflow-hidden border border-purple-500/40"
@@ -282,8 +292,8 @@ export default function DashboardPage() {
                   }
                   className="w-24 h-24 rounded-full object-cover border border-purple-500/40"
                 />
-                <span className="absolute bottom-0 right-0 bg-purple-600 text-xs px-2 py-0.5 rounded-full">
-                  Edit
+                <span className="absolute bottom-0 right-0 bg-purple-500/90 text-xs px-2 py-0.5 rounded-full">
+                  Change
                 </span>
               </button>
 
@@ -297,35 +307,29 @@ export default function DashboardPage() {
                 }
               />
 
-              {/* NAME */}
-              <input
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                placeholder="Your name"
-                className="w-full px-3 py-2 rounded bg-black/40 border border-purple-500/30"
-              />
-
+              {/* USERNAME (READ ONLY) */}
+              <p className="font-medium">{user.username}</p>
               <p className="text-sm opacity-70">{user.email}</p>
 
               <button
                 onClick={saveProfile}
                 disabled={savingProfile}
-                className="w-full mt-2 bg-purple-500/40 py-2 rounded-lg disabled:opacity-50"
+                className="w-full bg-purple-500/40 py-2 rounded-lg disabled:opacity-50"
               >
                 {savingProfile ? "Saving..." : "Save Profile"}
               </button>
 
               <Link
-              href="/profile"
-              onClick={() => setShowProfile(false)}
-              className="w-full text-center rounded-lg border border-purple-500/40 py-2 text-sm hover:bg-purple-500/10 transition"
+                href="/profile"
+                onClick={() => setShowProfile(false)}
+                className="w-full text-center rounded-lg border border-purple-500/40 py-2 text-sm hover:bg-purple-500/10 transition"
               >
-              View Full Profile →
+                View Full Profile →
               </Link>
 
               <button
                 onClick={logout}
-                className="w-full mt-2 bg-red-500/80 py-2 rounded-lg"
+                className="w-full bg-red-500/80 py-2 rounded-lg"
               >
                 Logout
               </button>
