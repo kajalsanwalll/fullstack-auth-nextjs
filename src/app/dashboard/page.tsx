@@ -5,19 +5,30 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
+type Note = {
+  _id: string;
+  title: string;
+  content: string;
+  isPinned: boolean;
+  isPublic: boolean;
+};
+
 export default function DashboardPage() {
-  const [notes, setNotes] = useState<any[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<any[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // 📥 FETCH NOTES
   const fetchNotes = async () => {
     try {
       const res = await axios.get("/api/users/notes", {
         withCredentials: true,
       });
-      setNotes(res.data.data || []);
-      setFilteredNotes(res.data.data || []);
+
+      const data = res.data.data || [];
+      setNotes(data);
+      setFilteredNotes(data);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load notes");
@@ -32,18 +43,16 @@ export default function DashboardPage() {
 
   // 🔍 SEARCH
   useEffect(() => {
-  const q = search.toLowerCase();
+    const q = search.toLowerCase();
 
-  setFilteredNotes(
-    notes.filter((note) => {
+    const filtered = notes.filter((note) => {
       const title = note.title?.toLowerCase() || "";
       const content = note.content?.toLowerCase() || "";
-
       return title.includes(q) || content.includes(q);
-    })
-  );
- }, [search, notes]);
+    });
 
+    setFilteredNotes(filtered);
+  }, [search, notes]);
 
   // 🗑 DELETE
   const deleteNote = async (id: string) => {
@@ -72,6 +81,21 @@ export default function DashboardPage() {
     }
   };
 
+  // 🌍 PUBLIC / PRIVATE
+  const togglePublic = async (id: string, isPublic: boolean) => {
+    try {
+      await axios.patch(
+        `/api/users/notes/${id}`,
+        { isPublic: !isPublic },
+        { withCredentials: true }
+      );
+      fetchNotes();
+      toast.success(isPublic ? "Made private" : "Made public");
+    } catch {
+      toast.error("Failed to update visibility");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -79,6 +103,11 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  // ⭐ PINNED FIRST
+  const sortedNotes = [...filteredNotes].sort(
+    (a, b) => Number(b.isPinned) - Number(a.isPinned)
+  );
 
   return (
     <div className="relative min-h-screen px-6 py-10 max-w-6xl mx-auto">
@@ -104,7 +133,7 @@ export default function DashboardPage() {
       />
 
       {/* EMPTY */}
-      {filteredNotes.length === 0 && (
+      {sortedNotes.length === 0 && (
         <div className="text-center mt-32 opacity-70">
           <p className="text-lg">No matching notes ✨</p>
         </div>
@@ -112,7 +141,7 @@ export default function DashboardPage() {
 
       {/* GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredNotes.map((note) => (
+        {sortedNotes.map((note) => (
           <div
             key={note._id}
             className="relative group rounded-2xl p-5 bg-purple-900/30 hover:bg-purple-900/50 transition backdrop-blur"
@@ -128,16 +157,31 @@ export default function DashboardPage() {
               {note.isPinned ? "★" : "☆"}
             </button>
 
+            {/* 🌍 PUBLIC / PRIVATE */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                togglePublic(note._id, note.isPublic);
+              }}
+              className="absolute bottom-3 left-3 text-xs px-2 py-1 rounded-lg
+                bg-black/40 border border-purple-500/30 hover:bg-purple-600/30"
+            >
+              {note.isPublic ? "Public" : "Private"}
+            </button>
+
             {/* 🗑 DELETE */}
             <button
-              onClick={() => deleteNote(note._id)}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteNote(note._id);
+              }}
               className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-500"
             >
               ✕
             </button>
 
             {/* NOTE LINK */}
-            <Link href={`/notes/${note._id}`} className="block">
+            <Link href={`/notes/${note._id}`} className="block mt-6">
               <h2 className="text-lg font-semibold mb-2 truncate">
                 {note.title}
               </h2>

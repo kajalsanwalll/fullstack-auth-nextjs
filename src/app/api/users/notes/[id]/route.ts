@@ -7,7 +7,6 @@ connect();
 
 /* =======================
    GET SINGLE NOTE
-   (public OR owner)
 ======================= */
 export async function GET(
   request: NextRequest,
@@ -25,30 +24,21 @@ export async function GET(
 
     const note = await Note.findOne({
       _id: id,
-      $or: [
-        { isPublic: true },
-        { user: userId },
-      ],
+      $or: [{ isPublic: true }, { user: userId }],
     });
 
     if (!note) {
-      return NextResponse.json(
-        { error: "Note not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Note not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, data: note });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 /* =======================
-   UPDATE NOTE (TITLE/CONTENT)
+   UPDATE NOTE (TITLE / CONTENT)
 ======================= */
 export async function PUT(
   request: NextRequest,
@@ -66,18 +56,12 @@ export async function PUT(
     );
 
     if (!note) {
-      return NextResponse.json(
-        { error: "Note not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Note not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, data: note });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -98,18 +82,12 @@ export async function DELETE(
     });
 
     if (!note) {
-      return NextResponse.json(
-        { error: "Note not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Note not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -132,17 +110,11 @@ export async function PATCH(
     );
 
     if (!note) {
-      return NextResponse.json(
-        { error: "Note not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Note not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, data: note });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
