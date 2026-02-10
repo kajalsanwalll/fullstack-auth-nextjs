@@ -1,10 +1,13 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
+/* ======================
+   TYPES
+====================== */
 type Note = {
   _id: string;
   title: string;
@@ -13,10 +16,46 @@ type Note = {
   isPublic: boolean;
 };
 
+type User = {
+  name: string;
+  email: string;
+  avatar?: string;
+};
+
 export default function DashboardPage() {
+  /* ======================
+     STATE
+  ====================== */
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const [user, setUser] = useState<User | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
+
+  // profile form (CONTROLLED ✅)
+  const [nameInput, setNameInput] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  /* ======================
+     FETCH USER
+  ====================== */
+  const fetchUser = async () => {
+    try {
+      const res = await axios.get("/api/users/me", {
+        withCredentials: true,
+      });
+
+      const u = res.data.data;
+      setUser(u);
+      setNameInput(u.name || ""); // ✅ fallback
+    } catch {
+      toast.error("Failed to load profile");
+    }
+  };
 
   /* ======================
      FETCH NOTES
@@ -27,8 +66,7 @@ export default function DashboardPage() {
         withCredentials: true,
       });
       setNotes(res.data.data || []);
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Failed to load notes");
     } finally {
       setLoading(false);
@@ -36,48 +74,68 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    fetchUser();
     fetchNotes();
   }, []);
 
   /* ======================
      ACTIONS
   ====================== */
+  const logout = async () => {
+    await axios.get("/api/users/logout");
+    toast.success("Logged out");
+    window.location.href = "/login";
+  };
+
   const deleteNote = async (id: string) => {
-    try {
-      await axios.delete(`/api/users/notes/${id}`, {
-        withCredentials: true,
-      });
-      setNotes((prev) => prev.filter((n) => n._id !== id));
-      toast.success("Note deleted");
-    } catch {
-      toast.error("Delete failed");
-    }
+    await axios.delete(`/api/users/notes/${id}`, {
+      withCredentials: true,
+    });
+    setNotes((prev) => prev.filter((n) => n._id !== id));
+    toast.success("Note deleted");
   };
 
   const togglePin = async (id: string, isPinned: boolean) => {
-    try {
-      await axios.patch(
-        `/api/users/notes/${id}`,
-        { isPinned: !isPinned },
-        { withCredentials: true }
-      );
-      fetchNotes();
-    } catch {
-      toast.error("Failed to update pin");
-    }
+    await axios.patch(
+      `/api/users/notes/${id}`,
+      { isPinned: !isPinned },
+      { withCredentials: true }
+    );
+    fetchNotes();
   };
 
   const togglePublic = async (id: string, isPublic: boolean) => {
+    await axios.patch(
+      `/api/users/notes/${id}`,
+      { isPublic: !isPublic },
+      { withCredentials: true }
+    );
+    fetchNotes();
+  };
+
+  /* ======================
+     UPDATE PROFILE
+  ====================== */
+  const saveProfile = async () => {
     try {
-      await axios.patch(
-        `/api/users/notes/${id}`,
-        { isPublic: !isPublic },
-        { withCredentials: true }
-      );
-      fetchNotes();
-      toast.success(isPublic ? "Made private" : "Made public");
+      setSavingProfile(true);
+
+      const formData = new FormData();
+      formData.append("name", nameInput);
+      if (avatarFile) formData.append("avatar", avatarFile);
+
+      await axios.patch("/api/users/profile", formData, {
+        withCredentials: true,
+      });
+
+      toast.success("Profile updated");
+      setShowProfile(false);
+      setAvatarFile(null);
+      fetchUser();
     } catch {
-      toast.error("Failed to update visibility");
+      toast.error("Profile update failed");
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -97,8 +155,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="opacity-70">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center opacity-70">
+        Loading…
       </div>
     );
   }
@@ -107,39 +165,32 @@ export default function DashboardPage() {
      NOTE CARD
   ====================== */
   const NoteCard = ({ note }: { note: Note }) => (
-    <div className="group relative rounded-2xl bg-purple-900/30 hover:bg-purple-900/50 transition backdrop-blur overflow-hidden min-h-[200px] flex flex-col">
-      {/* TOP BAR */}
-      <div className="flex items-center justify-between px-4 py-2">
-        <button
-          onClick={() => togglePin(note._id, note.isPinned)}
-          className="text-yellow-400 text-lg"
-        >
+    <div className="group rounded-2xl bg-purple-900/30 hover:bg-purple-900/50 transition min-h-[200px] flex flex-col">
+      <div className="flex justify-between px-4 py-2">
+        <button onClick={() => togglePin(note._id, note.isPinned)}>
           {note.isPinned ? "★" : "☆"}
         </button>
-
         <button
           onClick={() => deleteNote(note._id)}
-          className="opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-500"
+          className="opacity-0 group-hover:opacity-100 text-red-400"
         >
           ✕
         </button>
       </div>
 
-      {/* CONTENT */}
       <Link href={`/notes/${note._id}`} className="px-4 py-2 flex-1">
-        <h2 className="text-lg font-semibold mb-2 truncate">
+        <h2 className="font-semibold truncate">
           {note.title || "Untitled"}
         </h2>
-        <p className="text-sm opacity-70 line-clamp-4 break-words">
+        <p className="text-sm opacity-70 line-clamp-4">
           {note.content || "No content"}
         </p>
       </Link>
 
-      {/* FOOTER */}
-      <div className="px-4 py-2 border-t border-purple-500/20 flex justify-between items-center">
+      <div className="px-4 py-2 border-t border-purple-500/20">
         <button
           onClick={() => togglePublic(note._id, note.isPublic)}
-          className="text-xs px-2 py-1 rounded-lg bg-black/40 border border-purple-500/30 hover:bg-purple-600/30"
+          className="text-xs px-2 py-1 rounded-lg bg-black/40"
         >
           {note.isPublic ? "Public" : "Private"}
         </button>
@@ -150,69 +201,137 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen px-6 py-10 max-w-6xl mx-auto">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Your Notes</h1>
 
         <div className="flex items-center gap-3">
-          {/* 🌍 PUBLIC NOTES LINK */}
           <Link
             href="/public-notes"
-            className="px-4 py-2 rounded-xl border border-purple-500/40 text-sm hover:bg-purple-500/10 transition"
+            className="px-4 py-2 rounded-xl border border-purple-500/40"
           >
-            🌍 Explore Public Notes
+            🌍 Public Notes
           </Link>
 
-          {/* ➕ NEW NOTE */}
           <Link
             href="/notes/new"
-            className="px-5 py-2 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition"
+            className="px-5 py-2 rounded-xl bg-purple-600 text-white"
           >
             + New Note
           </Link>
+
+          {/* PROFILE BUTTON */}
+          <button
+            onClick={() => setShowProfile(true)}
+            className="w-10 h-10 rounded-full overflow-hidden border border-purple-500/40"
+          >
+            <img
+              src={user?.avatar || "/avatar.png"}
+              alt="avatar"
+              className="w-full h-full object-cover"
+            />
+          </button>
         </div>
       </div>
 
       {/* SEARCH */}
       <input
-        type="text"
-        placeholder="Search notes…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full mb-10 px-4 py-3 rounded-xl bg-black/40 border border-purple-500/30 outline-none focus:border-purple-500"
+        placeholder="Search notes…"
+        className="w-full mb-10 px-4 py-3 rounded-xl bg-black/40 border border-purple-500/30"
       />
 
-      {/* PINNED */}
+      {/* NOTES */}
       {pinnedNotes.length > 0 && (
         <>
-          <h2 className="mb-3 text-sm uppercase tracking-wide opacity-70">
-            📌 Pinned
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-            {pinnedNotes.map((note) => (
-              <NoteCard key={note._id} note={note} />
+          <h2 className="mb-3 opacity-70">📌 Pinned</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+            {pinnedNotes.map((n) => (
+              <NoteCard key={n._id} note={n} />
             ))}
           </div>
         </>
       )}
 
-      {/* OTHERS */}
-      {otherNotes.length > 0 ? (
-        <>
-          <h2 className="mb-3 text-sm uppercase tracking-wide opacity-70">
-            Notes
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {otherNotes.map((note) => (
-              <NoteCard key={note._id} note={note} />
-            ))}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {otherNotes.map((n) => (
+          <NoteCard key={n._id} note={n} />
+        ))}
+      </div>
+
+      {/* PROFILE MODAL */}
+      {showProfile && user && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="w-full max-w-sm bg-zinc-900 rounded-2xl p-6">
+            <div className="flex justify-between mb-4">
+              <h2 className="text-lg font-semibold">Profile</h2>
+              <button onClick={() => setShowProfile(false)}>✕</button>
+            </div>
+
+            <div className="flex flex-col items-center gap-4">
+              {/* AVATAR */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="relative"
+              >
+                <img
+                  src={
+                    avatarFile
+                      ? URL.createObjectURL(avatarFile)
+                      : user.avatar || "/avatar.png"
+                  }
+                  className="w-24 h-24 rounded-full object-cover border border-purple-500/40"
+                />
+                <span className="absolute bottom-0 right-0 bg-purple-600 text-xs px-2 py-0.5 rounded-full">
+                  Edit
+                </span>
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) =>
+                  setAvatarFile(e.target.files?.[0] || null)
+                }
+              />
+
+              {/* NAME */}
+              <input
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                placeholder="Your name"
+                className="w-full px-3 py-2 rounded bg-black/40 border border-purple-500/30"
+              />
+
+              <p className="text-sm opacity-70">{user.email}</p>
+
+              <button
+                onClick={saveProfile}
+                disabled={savingProfile}
+                className="w-full mt-2 bg-purple-500/40 py-2 rounded-lg disabled:opacity-50"
+              >
+                {savingProfile ? "Saving..." : "Save Profile"}
+              </button>
+
+              <Link
+              href="/profile"
+              onClick={() => setShowProfile(false)}
+              className="w-full text-center rounded-lg border border-purple-500/40 py-2 text-sm hover:bg-purple-500/10 transition"
+              >
+              View Full Profile →
+              </Link>
+
+              <button
+                onClick={logout}
+                className="w-full mt-2 bg-red-500/80 py-2 rounded-lg"
+              >
+                Logout
+              </button>
+            </div>
           </div>
-        </>
-      ) : (
-        pinnedNotes.length === 0 && (
-          <div className="text-center mt-32 opacity-70">
-            <p className="text-lg">No notes found ✨</p>
-          </div>
-        )
+        </div>
       )}
     </div>
   );
