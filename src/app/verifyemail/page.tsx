@@ -34,8 +34,8 @@ export default function VerifyEmailPage() {
     <div className="relative min-h-screen overflow-hidden bg-black">
       {/* Purple glow */}
       <div className="absolute inset-0">
-        <div className="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-purple-600/30 blur-[120px]" />
-        <div className="absolute top-1/3 left-1/4 h-[400px] w-[400px] rounded-full bg-pink-500/20 blur-[120px]" />
+        <div className="absolute -top-40 left-1/2 h-125 w-125 -translate-x-1/2 rounded-full bg-purple-600/30 blur-[120px]" />
+        <div className="absolute top-1/3 left-1/4 h-100 w-100 rounded-full bg-pink-500/20 blur-[120px]" />
       </div>
 
       {/* Grain */}
@@ -60,7 +60,7 @@ export default function VerifyEmailPage() {
               </h2>
               <Link
                 href="/login"
-                className="mt-4 inline-block rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 font-medium transition hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-purple-500/30"
+                className="mt-4 inline-block rounded-lg bg-linear-to-r from-purple-500 to-pink-500 px-6 py-3 font-medium transition hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-purple-500/30"
               >
                 Go to Login
               </Link>
