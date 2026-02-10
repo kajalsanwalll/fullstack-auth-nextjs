@@ -144,51 +144,55 @@ export default function DashboardPage() {
         {sortedNotes.map((note) => (
           <div
             key={note._id}
-            className="relative group rounded-2xl p-5 bg-purple-900/30 hover:bg-purple-900/50 transition backdrop-blur"
+            className="group rounded-2xl bg-purple-900/30 hover:bg-purple-900/50 transition backdrop-blur overflow-hidden min-h-[180px]"
           >
-            {/* ⭐ PIN */}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                togglePin(note._id, note.isPinned);
-              }}
-              className="absolute top-3 left-3 text-yellow-400 text-lg"
-            >
-              {note.isPinned ? "★" : "☆"}
-            </button>
+            {/* HEADER BAR */}
+            <div className="flex items-center justify-between px-4 py-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  togglePin(note._id, note.isPinned);
+                }}
+                className="text-yellow-400 text-lg"
+              >
+                {note.isPinned ? "★" : "☆"}
+              </button>
 
-            {/* 🌍 PUBLIC / PRIVATE */}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                togglePublic(note._id, note.isPublic);
-              }}
-              className="absolute bottom-3 left-3 text-xs px-2 py-1 rounded-lg
-                bg-black/40 border border-purple-500/30 hover:bg-purple-600/30"
-            >
-              {note.isPublic ? "Public" : "Private"}
-            </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteNote(note._id);
+                }}
+                className="opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-500"
+              >
+                ✕
+              </button>
+            </div>
 
-            {/* 🗑 DELETE */}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                deleteNote(note._id);
-              }}
-              className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-500"
-            >
-              ✕
-            </button>
-
-            {/* NOTE LINK */}
-            <Link href={`/notes/${note._id}`} className="block mt-6">
+            {/* CONTENT */}
+            <Link href={`/notes/${note._id}`} className="block px-4 py-3">
               <h2 className="text-lg font-semibold mb-2 truncate">
-                {note.title}
+                {note.title || "Untitled"}
               </h2>
-              <p className="text-sm opacity-70 line-clamp-3">
-                {note.content}
+
+              <p className="text-sm opacity-70 line-clamp-3 break-words">
+                {note.content || "No content"}
               </p>
             </Link>
+
+            {/* FOOTER BAR */}
+            <div className="flex items-center justify-between px-4 py-2 border-t border-purple-500/20">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  togglePublic(note._id, note.isPublic);
+                }}
+                className="text-xs px-2 py-1 rounded-lg
+                  bg-black/40 border border-purple-500/30 hover:bg-purple-600/30"
+              >
+                {note.isPublic ? "Public" : "Private"}
+              </button>
+            </div>
           </div>
         ))}
       </div>
