@@ -18,9 +18,7 @@ export async function GET(
     let userId: string | null = null;
     try {
       userId = getDataFromToken(request);
-    } catch {
-      userId = null;
-    }
+    } catch {}
 
     const note = await Note.findOne({
       _id: id,
@@ -28,12 +26,18 @@ export async function GET(
     });
 
     if (!note) {
-      return NextResponse.json({ error: "Note not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Note not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ success: true, data: note });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
