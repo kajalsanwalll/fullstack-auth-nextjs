@@ -15,10 +15,12 @@ export default function NewNotePage() {
     try {
       setLoading(true);
 
-      const res = await axios.post("/api/users/notes", {
-        title,
-        content,
-      });
+      const res = await axios.post(
+        "/api/users/notes",
+        { title, content },
+        { withCredentials: true }
+      );
+
 
       const noteId = res.data.data._id;
 

@@ -1,70 +1,77 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
-export default function NotePage({ params }: { params: { id: string } }) {
+export default function NotePage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
+
   const [note, setNote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    axios.get(`/api/notes/${params.id}`).then((res) => {
-      setNote(res.data);
-      setLoading(false);
-    });
-  }, [params.id]);
+    if (!id) return;
 
-  const saveNote = async () => {
-    await axios.put(`/api/notes/${params.id}`, {
-      title: note.title,
-      content: note.content,
-    });
-    alert("Saved ✨");
-  };
+    const fetchNote = async () => {
+      try {
+        const res = await axios.get(`/api/users/notes/${id}`);
+        setNote(res.data.data);
+      } catch (err) {
+        toast.error("Failed to load note");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNote();
+  }, [id]);
 
   const deleteNote = async () => {
-    await axios.delete(`/api/notes/${params.id}`);
-    router.push("/dashboard");
+    const ok = confirm("Delete this note permanently?");
+    if (!ok) return;
+
+    try {
+      setDeleting(true);
+      await axios.delete(`/api/users/notes/${id}`);
+      toast.success("Note deleted");
+      router.push("/dashboard");
+    } catch (err) {
+      toast.error("Failed to delete note");
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  if (loading) return <p className="p-10">Loading...</p>;
+  if (loading) return <p className="p-6">Loading...</p>;
+  if (!note) return <p className="p-6">Note not found</p>;
 
   return (
-    <div className="min-h-screen p-8 bg-black text-white">
-      <div className="max-w-3xl mx-auto space-y-4">
-        <input
-          className="w-full bg-transparent text-3xl font-bold outline-none"
-          value={note.title}
-          onChange={(e) =>
-            setNote({ ...note, title: e.target.value })
-          }
-        />
+    <div className="min-h-screen p-6 max-w-3xl mx-auto">
+      <h1 className="text-4xl font-bold mb-2">{note.title}</h1>
+      <p className="opacity-80 mb-6 whitespace-pre-wrap">
+        {note.content}
+      </p>
 
-        <textarea
-          className="w-full min-h-[300px] bg-white/5 p-4 rounded-xl outline-none"
-          value={note.content}
-          onChange={(e) =>
-            setNote({ ...note, content: e.target.value })
-          }
-        />
+      {/* ACTIONS */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600"
+        >
+          Back
+        </button>
 
-        <div className="flex gap-4">
-          <button
-            onClick={saveNote}
-            className="px-4 py-2 bg-purple-600 rounded-lg"
-          >
-            Save
-          </button>
-
-          <button
-            onClick={deleteNote}
-            className="px-4 py-2 bg-red-600 rounded-lg"
-          >
-            Delete
-          </button>
-        </div>
+        <button
+          onClick={deleteNote}
+          disabled={deleting}
+          className="px-4 py-2 rounded bg-red-600 hover:bg-red-700"
+        >
+          {deleting ? "Deleting..." : "Delete"}
+        </button>
       </div>
     </div>
   );

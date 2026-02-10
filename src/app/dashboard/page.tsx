@@ -11,7 +11,9 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const res = await axios.get("/api/users/notes");
+        const res = await axios.get("/api/users/notes", {
+         withCredentials: true,
+         });
         setNotes(res.data.data);
       } catch (err) {
         console.error(err);
