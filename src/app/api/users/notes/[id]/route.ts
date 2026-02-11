@@ -26,8 +26,8 @@ export async function GET(
     const note = await Note.findOne({
       _id: id,
       $or: [
-        { isPublic: true },
-        { user: userId },
+        { user: userId }, // ✅ Owner can always see
+        { isPublic: true, isApproved: true }, // ✅ Only approved public notes
       ],
     });
 
@@ -52,7 +52,7 @@ export async function GET(
 }
 
 /* =======================
-   UPDATE NOTE (TITLE / CONTENT)
+   UPDATE NOTE
    ONLY CREATOR CAN EDIT
 ======================= */
 export async function PUT(
@@ -73,7 +73,6 @@ export async function PUT(
       );
     }
 
-    // 🔒 SECURITY CHECK
     if (note.user.toString() !== userId) {
       return NextResponse.json(
         { error: "You are not allowed to edit this note" },
@@ -120,7 +119,6 @@ export async function DELETE(
       );
     }
 
-    // 🔒 SECURITY CHECK
     if (note.user.toString() !== userId) {
       return NextResponse.json(
         { error: "You are not allowed to delete this note" },
@@ -165,12 +163,16 @@ export async function PATCH(
       );
     }
 
-    // 🔒 SECURITY CHECK
     if (note.user.toString() !== userId) {
       return NextResponse.json(
         { error: "You are not allowed to modify this note" },
         { status: 403 }
       );
+    }
+
+    // ✅ If user makes note public → reset approval
+    if (body.isPublic === true && note.isPublic === false) {
+      note.isApproved = false;
     }
 
     Object.assign(note, body);
