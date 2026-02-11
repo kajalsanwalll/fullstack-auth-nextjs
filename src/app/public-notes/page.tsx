@@ -17,7 +17,7 @@ type PublicNote = {
     username: string;
     email: string;
     avatar?: string;
-  };
+  } | null; // ✅ allow null
 };
 
 export default function PublicNotesPage() {
@@ -47,7 +47,13 @@ export default function PublicNotesPage() {
 
         // Fetch public notes
         const res = await axios.get("/api/users/public-notes");
-        setNotes(res.data.data || []);
+
+        // ✅ remove broken notes (deleted users)
+        const safeNotes = (res.data.data || []).filter(
+          (note: PublicNote) => note.user !== null
+        );
+
+        setNotes(safeNotes);
       } catch (err) {
         console.error("Failed to fetch public notes", err);
       } finally {
@@ -59,13 +65,17 @@ export default function PublicNotesPage() {
   }, []);
 
   /* ======================
-     FILTER NOTES
+     FILTER NOTES (SAFE)
   ====================== */
-  const filteredNotes = notes.filter((note) =>
-    note.title.toLowerCase().includes(search.toLowerCase()) ||
-    note.content.toLowerCase().includes(search.toLowerCase()) ||
-    note.user.username.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredNotes = notes.filter((note) => {
+    const searchLower = search.toLowerCase();
+
+    return (
+      note.title?.toLowerCase().includes(searchLower) ||
+      note.content?.toLowerCase().includes(searchLower) ||
+      note.user?.username?.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (loading) {
     return (
@@ -79,7 +89,6 @@ export default function PublicNotesPage() {
     <div className="min-h-screen flex flex-col px-6 py-10 max-w-6xl mx-auto">
       {/* MAIN */}
       <div className="flex-1">
-
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">🌍 Public Notes</h1>
@@ -112,11 +121,12 @@ export default function PublicNotesPage() {
           />
         </div>
 
-        {/* CTA (only if NOT logged in) */}
+        {/* CTA */}
         {!isLoggedIn && (
           <div className="mb-10 rounded-2xl border border-purple-500/30 bg-purple-900/20 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm opacity-80">
-              ✨ See the full potential — create, pin, and manage your own notes by logging in.
+              ✨ See the full potential — create, pin, and manage your own
+              notes by logging in.
             </p>
 
             <div className="flex gap-3">
@@ -161,24 +171,26 @@ export default function PublicNotesPage() {
 
                 {/* AUTHOR */}
                 <div className="flex items-center gap-3 mt-4 pt-3 border-t border-purple-500/20">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedUser(note.user);
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <img
-                      src={note.user.avatar || "/avatar.png"}
-                      alt="author"
-                      className="w-7 h-7 rounded-full object-cover border border-purple-500/40"
-                    />
+                  {note.user && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedUser(note.user);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <img
+                        src={note.user.avatar || "/avatar.png"}
+                        alt="author"
+                        className="w-7 h-7 rounded-full object-cover border border-purple-500/40"
+                      />
 
-                    <span className="text-sm text-purple-300 hover:underline">
-                      @{note.user.username}
-                    </span>
-                  </button>
+                      <span className="text-sm text-purple-300 hover:underline">
+                        @{note.user.username || "Unknown"}
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -188,7 +200,7 @@ export default function PublicNotesPage() {
 
       {/* FOOTER */}
       <footer className="py-4 text-center text-sm bg-purple-900/40 rounded-3xl opacity-70 mt-10">
-        Made with <span className="text-red-400">❤️</span> and an unhealthy amount of caffeine ☕ by{" "}
+        Made with <span className="text-red-400">❤️</span> and caffeine ☕ by{" "}
         <span className="font-medium">Kajal Sanwal</span>
       </footer>
 
@@ -208,11 +220,11 @@ export default function PublicNotesPage() {
               />
 
               <p className="font-medium text-lg">
-                @{selectedUser.username}
+                @{selectedUser.username || "Unknown"}
               </p>
 
               <p className="text-sm opacity-70">
-                {selectedUser.email}
+                {selectedUser.email || "No email"}
               </p>
 
               <button
