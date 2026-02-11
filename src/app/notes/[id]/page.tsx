@@ -12,6 +12,7 @@ export default function NotePage() {
   const [note, setNote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
@@ -38,10 +39,13 @@ export default function NotePage() {
   const saveChanges = async () => {
     try {
       setSaving(true);
+
       const res = await axios.put(`/api/users/notes/${id}`, {
         title,
         content,
+        images: note.images, // ✅ IMPORTANT: KEEP IMAGES
       });
+
       setNote(res.data.data);
       setEditing(false);
       toast.success("Note updated ✨");
@@ -72,35 +76,47 @@ export default function NotePage() {
       <div className="w-full max-w-4xl rounded-2xl bg-gradient-to-br from-purple-900/40 to-black/60 border border-purple-800/40 p-6 shadow-xl">
 
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-6">
-          {!editing ? (
-            <h1 className="text-4xl font-bold text-white">
-              {note.title}
-            </h1>
-          ) : (
-            <input
-              className="w-full bg-black/40 border border-purple-700 rounded-lg px-4 py-2 text-xl text-white outline-none"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          )}
-        </div>
+        {!editing ? (
+          <h1 className="text-4xl font-bold text-white mb-4">
+            {note.title}
+          </h1>
+        ) : (
+          <input
+            className="w-full bg-black/40 border border-purple-700 rounded-lg px-4 py-2 text-xl text-white outline-none mb-4"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        )}
 
         {/* CONTENT */}
         {!editing ? (
-          <p className="whitespace-pre-wrap text-purple-100 opacity-90 mb-8">
+          <p className="whitespace-pre-wrap text-purple-100 opacity-90">
             {note.content}
           </p>
         ) : (
           <textarea
-            className="w-full min-h-50 bg-black/40 border border-purple-700 rounded-lg px-4 py-3 text-purple-100 outline-none"
+            className="w-full min-h-[150px] bg-black/40 border border-purple-700 rounded-lg px-4 py-3 text-purple-100 outline-none"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
         )}
 
+        {/* 🖼️ IMAGES */}
+        {note.images?.length > 0 && (
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {note.images.map((img: string, idx: number) => (
+              <img
+                key={idx}
+                src={img}
+                alt={`note-image-${idx}`}
+                className="rounded-xl border border-purple-500/30 object-cover"
+              />
+            ))}
+          </div>
+        )}
+
         {/* ACTIONS */}
-        <div className="flex gap-3 mt-6">
+        <div className="flex gap-3 mt-8">
           <button
             onClick={() => router.push("/dashboard")}
             className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600"
@@ -134,16 +150,15 @@ export default function NotePage() {
 
           <button
             onClick={async () => {
-            await axios.patch(`/api/users/notes/${id}`, {
-            isPublic: !note.isPublic,
-            });
-            location.reload();
+              await axios.patch(`/api/users/notes/${id}`, {
+                isPublic: !note.isPublic,
+              });
+              location.reload();
             }}
-            className="px-4 py-2 rounded-lg bg-purple-600 mt-4"
-            >
+            className="px-4 py-2 rounded-lg bg-purple-600"
+          >
             {note.isPublic ? "Make Private" : "Make Public"}
           </button>
-
         </div>
       </div>
     </div>

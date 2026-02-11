@@ -9,19 +9,25 @@ connect();
 export async function POST(request: NextRequest) {
   try {
     const userId = getDataFromToken(request);
-    const { title, content } = await request.json();
+    const { title, content, images = [] } = await request.json();
 
     const note = await Note.create({
       title,
       content,
-      user: userId, // ✅ FIX
+      images,
+      user: userId,
     });
 
     return NextResponse.json({ success: true, data: note });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
+
+
 
 // ✅ GET ALL NOTES FOR DASHBOARD
 export async function GET(request: NextRequest) {
