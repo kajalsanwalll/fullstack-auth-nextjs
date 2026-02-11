@@ -33,6 +33,16 @@ const noteSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+
+    isRejected: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

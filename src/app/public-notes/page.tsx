@@ -14,10 +14,10 @@ type PublicNote = {
   createdAt: string;
   user: {
     _id: string;
-    username: string;
-    email: string;
+    username?: string;
+    email?: string;
     avatar?: string;
-  } | null; // ✅ allow null
+  } | null;
 };
 
 export default function PublicNotesPage() {
@@ -47,13 +47,7 @@ export default function PublicNotesPage() {
 
         // Fetch public notes
         const res = await axios.get("/api/users/public-notes");
-
-        // ✅ remove broken notes (deleted users)
-        const safeNotes = (res.data.data || []).filter(
-          (note: PublicNote) => note.user !== null
-        );
-
-        setNotes(safeNotes);
+        setNotes(res.data.data || []);
       } catch (err) {
         console.error("Failed to fetch public notes", err);
       } finally {
@@ -65,7 +59,7 @@ export default function PublicNotesPage() {
   }, []);
 
   /* ======================
-     FILTER NOTES (SAFE)
+     SAFE FILTER
   ====================== */
   const filteredNotes = notes.filter((note) => {
     const searchLower = search.toLowerCase();
@@ -89,6 +83,7 @@ export default function PublicNotesPage() {
     <div className="min-h-screen flex flex-col px-6 py-10 max-w-6xl mx-auto">
       {/* MAIN */}
       <div className="flex-1">
+
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">🌍 Public Notes</h1>
@@ -110,7 +105,7 @@ export default function PublicNotesPage() {
           )}
         </div>
 
-        {/* SEARCH BAR */}
+        {/* SEARCH */}
         <div className="mb-6">
           <input
             type="text"
@@ -121,7 +116,7 @@ export default function PublicNotesPage() {
           />
         </div>
 
-        {/* CTA */}
+        {/* CTA (if not logged in) */}
         {!isLoggedIn && (
           <div className="mb-10 rounded-2xl border border-purple-500/30 bg-purple-900/20 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm opacity-80">
@@ -147,7 +142,7 @@ export default function PublicNotesPage() {
           </div>
         )}
 
-        {/* NOTES GRID */}
+        {/* NOTES */}
         {filteredNotes.length === 0 ? (
           <div className="text-center mt-32 opacity-70">
             <p>No matching public notes ✨</p>
@@ -171,26 +166,24 @@ export default function PublicNotesPage() {
 
                 {/* AUTHOR */}
                 <div className="flex items-center gap-3 mt-4 pt-3 border-t border-purple-500/20">
-                  {note.user && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedUser(note.user);
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <img
-                        src={note.user.avatar || "/avatar.png"}
-                        alt="author"
-                        className="w-7 h-7 rounded-full object-cover border border-purple-500/40"
-                      />
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedUser(note.user);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <img
+                      src={note.user?.avatar || "/avatar.png"}
+                      alt="author"
+                      className="w-7 h-7 rounded-full object-cover border border-purple-500/40"
+                    />
 
-                      <span className="text-sm text-purple-300 hover:underline">
-                        @{note.user.username || "Unknown"}
-                      </span>
-                    </button>
-                  )}
+                    <span className="text-sm text-purple-300 hover:underline">
+                      @{note.user?.username || "Deleted User"}
+                    </span>
+                  </button>
                 </div>
               </div>
             ))}
@@ -215,16 +208,16 @@ export default function PublicNotesPage() {
 
             <div className="flex flex-col items-center gap-4">
               <img
-                src={selectedUser.avatar || "/avatar.png"}
+                src={selectedUser?.avatar || "/avatar.png"}
                 className="w-20 h-20 rounded-full object-cover border border-purple-500/40"
               />
 
               <p className="font-medium text-lg">
-                @{selectedUser.username || "Unknown"}
+                @{selectedUser?.username || "Deleted User"}
               </p>
 
               <p className="text-sm opacity-70">
-                {selectedUser.email || "No email"}
+                {selectedUser?.email || "No email"}
               </p>
 
               <button

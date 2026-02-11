@@ -7,10 +7,10 @@ connect();
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getDataFromToken(request);
+    const userId = await getDataFromToken(request);
 
     const user = await User.findById(userId)
-      .select("-password -isAdmin");
+      .select("-password"); // ✅ ONLY remove password
 
     if (!user) {
       return NextResponse.json(
@@ -22,12 +22,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "User found!",
-      data: user,
+      data: user, // ✅ includes isAdmin now
     });
+
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: "Not authenticated" },
-      { status: 401 } // 🔥 THIS IS THE IMPORTANT FIX
+      { status: 401 }
     );
   }
 }
