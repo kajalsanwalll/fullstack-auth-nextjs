@@ -4,7 +4,6 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-
 /* ======================
    TYPES
 ====================== */
@@ -84,7 +83,6 @@ export default function DashboardPage() {
     await axios.get("/api/users/logout");
     toast.success("Logged out");
     window.location.href = "/landing";
-    router.refresh();
   };
 
   const deleteNote = async (id: string) => {
