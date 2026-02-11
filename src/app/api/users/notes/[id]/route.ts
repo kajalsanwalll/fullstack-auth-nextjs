@@ -26,10 +26,10 @@ export async function GET(
     const note = await Note.findOne({
       _id: id,
       $or: [
-        { user: userId }, // ✅ Owner can always see
-        { isPublic: true, isApproved: true }, // ✅ Only approved public notes
+        { user: userId }, // Owner
+        { isPublic: true, isApproved: true }, // Public approved
       ],
-    });
+    }).populate("user", "_id username email avatar"); // ✅ IMPORTANT
 
     if (!note) {
       return NextResponse.json(
@@ -42,7 +42,6 @@ export async function GET(
       success: true,
       data: note,
     });
-
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },
@@ -50,6 +49,7 @@ export async function GET(
     );
   }
 }
+
 
 /* =======================
    UPDATE NOTE

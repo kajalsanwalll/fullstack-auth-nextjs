@@ -14,7 +14,7 @@ export async function GET() {
       .sort({ createdAt: -1 })
       .populate({
         path: "user",
-        select: "username email avatar",
+        select: "_id username email avatar",
         options: { strictPopulate: false },
       })
       .select("_id title content createdAt user");

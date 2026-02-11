@@ -10,6 +10,8 @@ export default function NotePage() {
   const router = useRouter();
 
   const [note, setNote] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
@@ -20,16 +22,28 @@ export default function NotePage() {
   const [saving, setSaving] = useState(false);
   const [zoomImg, setZoomImg] = useState<string | null>(null);
 
+  /* ======================
+     FETCH NOTE + USER
+  ====================== */
   useEffect(() => {
     if (!id) return;
 
-    const fetchNote = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(`/api/users/notes/${id}`);
-        setNote(res.data.data);
-        setTitle(res.data.data.title);
-        setContent(res.data.data.content);
-        setImages(res.data.data.images || []);
+        const noteRes = await axios.get(`/api/users/notes/${id}`);
+        const noteData = noteRes.data.data;
+
+        setNote(noteData);
+        setTitle(noteData.title);
+        setContent(noteData.content);
+        setImages(noteData.images || []);
+
+        try {
+          const userRes = await axios.get("/api/users/me");
+          setCurrentUser(userRes.data.data);
+        } catch {
+          setCurrentUser(null);
+        }
       } catch {
         toast.error("Failed to load note");
       } finally {
@@ -37,8 +51,16 @@ export default function NotePage() {
       }
     };
 
-    fetchNote();
+    fetchData();
   }, [id]);
+
+  /* ======================
+     FIXED OWNER CHECK
+  ====================== */
+  const isOwner =
+    currentUser?._id &&
+    note?.user?._id &&
+    String(currentUser._id) === String(note.user._id);
 
   /* ======================
      SAVE CHANGES
@@ -50,7 +72,7 @@ export default function NotePage() {
       const res = await axios.put(`/api/users/notes/${id}`, {
         title,
         content,
-        images, // ✅ KEEP UPDATED ORDER
+        images,
       });
 
       setNote(res.data.data);
@@ -79,140 +101,187 @@ export default function NotePage() {
   };
 
   /* ======================
-     IMAGE REORDER (DRAG)
+     DOWNLOAD PDF
   ====================== */
-  const moveImage = (from: number, to: number) => {
-    const updated = [...images];
-    const [moved] = updated.splice(from, 1);
-    updated.splice(to, 0, moved);
-    setImages(updated);
+  const downloadNote = async () => {
+    const html2pdf = (await import("html2pdf.js")).default;
+
+    const element = document.createElement("div");
+    element.style.padding = "20px";
+    element.style.fontFamily = "Arial";
+    element.style.color = "black";
+    element.style.background = "white";
+
+    element.innerHTML = `
+      <h1>${note.title}</h1>
+      <p style="white-space: pre-wrap; margin-top:10px;">
+        ${note.content}
+      </p>
+      <div id="pdf-images" style="margin-top:20px;"></div>
+    `;
+
+    document.body.appendChild(element);
+
+    const imageContainer = element.querySelector("#pdf-images");
+
+    await Promise.all(
+      images.map(
+        (src) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = src;
+            img.style.width = "100%";
+            img.style.marginTop = "15px";
+
+            img.onload = () => {
+              imageContainer?.appendChild(img);
+              resolve();
+            };
+
+            img.onerror = () => resolve();
+          })
+      )
+    );
+
+    await html2pdf()
+      .set({
+        margin: 10,
+        filename: `${note.title || "note"}.pdf`,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+        },
+      })
+      .from(element)
+      .save();
+
+    document.body.removeChild(element);
   };
 
-  if (loading) return <p className="p-6">Loading...</p>;
-  if (!note) return <p className="p-6">Note not found</p>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Loading...
+      </div>
+    );
+
+  if (!note)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Note not found
+      </div>
+    );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-4xl rounded-2xl bg-gradient-to-br from-purple-900/40 to-black/60 border border-purple-800/40 p-6 shadow-xl">
+    <div className="min-h-screen bg-gradient-to-br from-[#14002b] via-[#1f0036] to-black text-white px-4 py-8">
 
-        {/* TITLE */}
-        {!editing ? (
-          <h1 className="text-4xl font-bold text-white mb-4">
-            {note.title}
-          </h1>
-        ) : (
-          <input
-            className="w-full bg-black/40 border border-purple-700 rounded-lg px-4 py-2 text-xl text-white mb-4"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        )}
+      <div className="max-w-3xl mx-auto">
 
-        {/* CONTENT */}
-        {!editing ? (
-          <p className="whitespace-pre-wrap text-purple-100 opacity-90">
-            {note.content}
-          </p>
-        ) : (
-          <textarea
-            className="w-full min-h-[150px] bg-black/40 border border-purple-700 rounded-lg px-4 py-3 text-purple-100"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-        )}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-6 md:p-8">
 
-        {/* 🖼️ IMAGES */}
-        {images.length > 0 && (
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {images.map((img, idx) => (
-              <div
-                key={idx}
-                draggable={editing}
-                onDragStart={(e) =>
-                  e.dataTransfer.setData("imgIndex", idx.toString())
-                }
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  const from = Number(
-                    e.dataTransfer.getData("imgIndex")
-                  );
-                  moveImage(from, idx);
-                }}
-                className="relative group cursor-pointer"
-              >
-                <img
-                  src={img}
-                  onClick={() => setZoomImg(img)}
-                  className="rounded-xl border border-purple-500/30 object-cover"
-                />
-
-                {/* DELETE IMAGE (EDIT MODE) */}
-                {editing && (
-                  <button
-                    onClick={() =>
-                      setImages(images.filter((_, i) => i !== idx))
-                    }
-                    className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100"
-                  >
-                    ✕
-                  </button>
-                )}
-
-                {/* DRAG LABEL */}
-                {editing && (
-                  <span className="absolute bottom-2 left-2 text-xs bg-black/60 px-2 py-1 rounded">
-                    drag
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ACTIONS */}
-        <div className="flex gap-3 mt-8">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="px-4 py-2 rounded-lg bg-gray-700"
-          >
-            Back
-          </button>
-
+          {/* TITLE */}
           {!editing ? (
-            <button
-              onClick={() => setEditing(true)}
-              className="px-4 py-2 rounded-lg bg-purple-600"
-            >
-              Edit
-            </button>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+              {note.title}
+            </h1>
           ) : (
-            <button
-              onClick={saveChanges}
-              disabled={saving}
-              className="px-4 py-2 rounded-lg bg-green-600"
-            >
-              {saving ? "Saving..." : "Save"}
-            </button>
+            <input
+              className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2 mb-4"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           )}
 
-          <button
-            onClick={deleteNote}
-            className="ml-auto px-4 py-2 rounded-lg bg-red-600"
-          >
-            Delete
-          </button>
+          {/* CONTENT */}
+          {!editing ? (
+            <p className="text-purple-200 whitespace-pre-wrap leading-relaxed mb-6">
+              {note.content}
+            </p>
+          ) : (
+            <textarea
+              className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 mb-6"
+              rows={6}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          )}
+
+          {/* IMAGES */}
+          {images.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {images.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl overflow-hidden group relative cursor-pointer"
+                >
+                  <img
+                    src={img}
+                    onClick={() => setZoomImg(img)}
+                    className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ACTIONS */}
+          <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-white/10">
+
+            <button
+              onClick={() => router.back()}
+              className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition"
+            >
+              ← Back
+            </button>
+
+            <button
+              onClick={downloadNote}
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:scale-105 transition"
+            >
+              Download PDF
+            </button>
+
+            {isOwner && !editing && (
+              <button
+                onClick={() => setEditing(true)}
+                className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 transition"
+              >
+                Edit
+              </button>
+            )}
+
+            {isOwner && editing && (
+              <button
+                onClick={saveChanges}
+                disabled={saving}
+                className="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 transition"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+            )}
+
+            {isOwner && (
+              <button
+                onClick={deleteNote}
+                className="ml-auto px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 transition"
+              >
+                Delete
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* 🔍 ZOOM MODAL */}
+      {/* ZOOM */}
       {zoomImg && (
         <div
           onClick={() => setZoomImg(null)}
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
         >
           <img
             src={zoomImg}
-            className="max-h-[90vh] max-w-[90vw] rounded-xl"
+            className="max-h-[90vh] max-w-[90vw] rounded-2xl"
           />
         </div>
       )}
