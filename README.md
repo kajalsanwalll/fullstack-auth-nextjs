@@ -1,39 +1,166 @@
-# 📝 Notes App – Full Stack Next.js
-
-A modern full-stack notes application built with **Next.js 16**, **MongoDB**, and **JWT authentication**.  
-Users can securely create, manage, and share notes with a clean, Vercel-style UI.
-
+📝 Public Notes App (Admin Approval System)
 ---
+A full-stack Notes application built with Next.js 14 (App Router), MongoDB, and JWT authentication, where users can create notes and request them to be made public — but only an admin can approve or reject them.
 
-## ✨ Features
+🚀 Features
+--
+👤 Authentication
 
-- 🔐 Authentication (Signup / Login / Logout)
-- 📝 Create, edit, delete notes
-- ⭐ Pin / unpin notes (pinned notes stay on top)
-- 🔍 Search notes instantly
-- 🔒 Private notes (default)
-- 🌍 Public notes (shareable via URL)
-- 🎨 Modern glassmorphism UI with purple glow
-- 📦 MongoDB Atlas + Mongoose
-- 🍪 JWT auth via HttpOnly cookies
+User Signup & Login  
+JWT-based authentication  
+Protected routes  
+Secure password storage (hashed)
 
----
+📝 Notes
 
-## 🛠 Tech Stack
+Create private notes  
+Request to make a note public  
+View your own notes  
 
-- **Frontend**: Next.js 16 (App Router), React, Tailwind CSS
-- **Backend**: Next.js API routes
-- **Database**: MongoDB Atlas
-- **Auth**: JWT + bcrypt
-- **Email**: Mailtrap (email verification)
-- **Deployment Ready**: Vercel
+🌍 Public Notes
 
----
+Only approved notes appear publicly  
+Public notes show:  
+* Title  
+* Content  
+* Author username  
+* Avatar
 
-## 🚀 Getting Started
+🛡️ Admin Panel
 
-### 1️⃣ Clone repo
+Only users with isAdmin: true can:
 
-```bash
-git clone https://github.com/kajalsanwalll/fullstack-auth.git
-cd fullstack-auth
+- View pending public requests
+
+- Approve notes
+
+- Reject notes
+
+Public notes require:
+
+- isPublic: true
+
+- isApproved: true
+
+🧠 Tech Stack
+--
+Frontend: Next.js 14 (App Router)  
+Backend: Next.js API Routes  
+Database: MongoDB + Mongoose   
+Authentication: JWT  
+Deployment: Vercel  
+Email (Dev): Mailtrap (for verification testing)  
+
+📂 Project Structure
+--
+src/
+ ├── app/  
+ │   ├── api/  
+ │   │   ├── users/  
+ │   │   ├── notes/  
+ │   │   ├── admin/  
+ │   │   └── public/  
+ │   ├── profile/  
+ │   ├── admin/  
+ │   └── ...  
+ │
+ ├── components/  
+ │
+ ├── models/  
+ │   ├── userModel.ts  
+ │   └── noteModel.ts  
+ │
+ ├── dbConfig/  
+ │   └── dbConfig.ts  
+ │
+ └── helpers/  
+     └── getDataFromToken.ts  
+
+⚙️ Environment Variables
+--
+Create a .env.local file:
+
+MONGO_URI=your_mongodb_connection_string
+TOKEN_SECRET=your_jwt_secret
+DOMAIN=http://localhost:3000
+
+
+For production (Vercel), add these in:
+
+Vercel Dashboard → Settings → Environment Variables
+
+🛠️ Installation
+--
+git clone https://github.com/kajalsanwalll/fullstack-auth-nextjs.git  
+cd fullstack-auth-nextjs  
+npm install  
+npm run dev  
+
+
+* App runs at:
+
+http://localhost:3000
+
+🔐 How Admin Approval Works
+--
+User creates a note
+
+User sets isPublic = true
+
+Note appears in Admin Panel as Pending
+
+Admin:
+
+Approves → isApproved = true
+
+Rejects → isPublic = false
+
+Only approved notes appear in:
+
+/api/public
+
+🌍 Deployment (Vercel)
+--
+Push project to GitHub
+
+Go to https://vercel.com
+
+Import repository
+
+Add environment variables
+
+Deploy
+
+✅ Your MongoDB must be hosted (e.g., MongoDB Atlas)
+
+📌 Future Improvements
+--
+🔔 Real-time admin notifications
+
+📧 Production email verification (Resend / SendGrid)
+
+🧾 Pagination for public notes
+
+🖼️ Image upload crop support
+
+🔎 Search functionality
+
+🌙 Dark mode
+
+🎯 Purpose
+--
+This project demonstrates:
+
+Full-stack development
+
+Secure authentication
+
+Role-based access control
+
+Admin moderation system
+
+Production-ready MongoDB setup
+
+👩‍💻 Author
+--
+Built by Kajal Sanwal :)
