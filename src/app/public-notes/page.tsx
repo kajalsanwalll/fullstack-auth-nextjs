@@ -21,21 +21,31 @@ type PublicNote = {
 };
 
 export default function PublicNotesPage() {
-  /* ======================
-     STATE
-  ====================== */
   const [notes, setNotes] = useState<PublicNote[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [selectedUser, setSelectedUser] =
     useState<PublicNote["user"] | null>(null);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [search, setSearch] = useState("");
+
   /* ======================
-     FETCH PUBLIC NOTES
+     FETCH DATA
   ====================== */
   useEffect(() => {
-    const fetchPublicNotes = async () => {
+    const fetchData = async () => {
       try {
+        // Check login
+        try {
+          await axios.get("/api/users/me", {
+            withCredentials: true,
+          });
+          setIsLoggedIn(true);
+        } catch {
+          setIsLoggedIn(false);
+        }
+
+        // Fetch public notes
         const res = await axios.get("/api/users/public-notes");
         setNotes(res.data.data || []);
       } catch (err) {
@@ -45,8 +55,17 @@ export default function PublicNotesPage() {
       }
     };
 
-    fetchPublicNotes();
+    fetchData();
   }, []);
+
+  /* ======================
+     FILTER NOTES
+  ====================== */
+  const filteredNotes = notes.filter((note) =>
+    note.title.toLowerCase().includes(search.toLowerCase()) ||
+    note.content.toLowerCase().includes(search.toLowerCase()) ||
+    note.user.username.toLowerCase().includes(search.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -58,57 +77,78 @@ export default function PublicNotesPage() {
 
   return (
     <div className="min-h-screen flex flex-col px-6 py-10 max-w-6xl mx-auto">
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <div className="flex-1">
+
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">🌍 Public Notes</h1>
 
-          <Link
-            href="/dashboard"
-            className="text-sm opacity-70 hover:opacity-100"
-          >
-            ← Back to Dashboard
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/dashboard"
+              className="text-sm opacity-70 hover:opacity-100"
+            >
+              ← Back to Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/landing"
+              className="text-sm opacity-70 hover:opacity-100"
+            >
+              ← Back to Home
+            </Link>
+          )}
         </div>
 
-        {/* CTA BANNER */}
-        <div className="mb-10 rounded-2xl border border-purple-500/30 bg-purple-900/20 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm opacity-80">
-            ✨ See the full potential — create, pin, and manage your own notes by
-            logging in.
-          </p>
+        {/* SEARCH BAR */}
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search notes, content, or users..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full p-3 rounded-xl bg-black/40 border border-purple-700 text-white outline-none focus:ring-2 focus:ring-purple-500"
+          />
+        </div>
 
-          <div className="flex gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 rounded-lg bg-purple-600 text-sm hover:bg-purple-700 transition"
-            >
-              Login
-            </Link>
+        {/* CTA (only if NOT logged in) */}
+        {!isLoggedIn && (
+          <div className="mb-10 rounded-2xl border border-purple-500/30 bg-purple-900/20 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm opacity-80">
+              ✨ See the full potential — create, pin, and manage your own notes by logging in.
+            </p>
 
-            <Link
-              href="/signup"
-              className="px-4 py-2 rounded-lg border border-purple-500/40 text-sm hover:bg-purple-500/10 transition"
-            >
-              Sign up
-            </Link>
+            <div className="flex gap-3">
+              <Link
+                href="/login"
+                className="px-4 py-2 rounded-lg bg-purple-600 text-sm hover:bg-purple-700 transition"
+              >
+                Login
+              </Link>
+
+              <Link
+                href="/signup"
+                className="px-4 py-2 rounded-lg border border-purple-500/40 text-sm hover:bg-purple-500/10 transition"
+              >
+                Sign up
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* NOTES GRID */}
-        {notes.length === 0 ? (
+        {filteredNotes.length === 0 ? (
           <div className="text-center mt-32 opacity-70">
-            <p>No public notes yet ✨</p>
+            <p>No matching public notes ✨</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {notes.map((note) => (
+            {filteredNotes.map((note) => (
               <div
                 key={note._id}
                 className="rounded-2xl p-5 bg-purple-900/30 hover:bg-purple-900/50 transition backdrop-blur flex flex-col"
               >
-                {/* NOTE CONTENT */}
                 <Link href={`/notes/${note._id}`} className="flex-1">
                   <h2 className="text-lg font-semibold mb-2 truncate">
                     {note.title || "Untitled"}
@@ -147,7 +187,7 @@ export default function PublicNotesPage() {
       </div>
 
       {/* FOOTER */}
-      <footer className="py-6 text-center text-sm bg-purple-900/40 rounded-4xl opacity-70">
+      <footer className="py-4 text-center text-sm bg-purple-900/40 rounded-3xl opacity-70 mt-10">
         Made with <span className="text-red-400">❤️</span> and an unhealthy amount of caffeine ☕ by{" "}
         <span className="font-medium">Kajal Sanwal</span>
       </footer>

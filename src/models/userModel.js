@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ IMPORTANT: model name MUST be "User"
+//  IMPORTANT: model name MUST be "User"
 const User =
   mongoose.models.User || mongoose.model("User", userSchema);
 

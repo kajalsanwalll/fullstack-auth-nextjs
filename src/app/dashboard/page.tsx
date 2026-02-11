@@ -83,7 +83,7 @@ export default function DashboardPage() {
   const logout = async () => {
     await axios.get("/api/users/logout");
     toast.success("Logged out");
-    window.location.href = "/login";
+    window.location.href = "/landing";
   };
 
   const deleteNote = async (id: string) => {

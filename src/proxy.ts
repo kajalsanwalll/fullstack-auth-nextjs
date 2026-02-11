@@ -5,33 +5,43 @@ export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get("token")?.value || "";
 
-  // ✅ AUTH PAGES (redirect logged-in users)
+  // ==============================
+  // ✅ AUTH PAGES
+  // ==============================
   const authPages =
     path === "/login" ||
     path === "/signup" ||
     path === "/verifyemail";
 
+  // If logged in → block auth pages
   if (authPages && token) {
     return NextResponse.redirect(
-      new URL("/dashboard", request.nextUrl)
+      new URL("/dashboard", request.url)
     );
   }
 
-  // ✅ PUBLIC PAGE (accessible to everyone)
-  if (path === "/public-notes") {
+  // ==============================
+  // ✅ PUBLIC PAGES
+  // ==============================
+  const publicPages =
+    path === "/" ||            // landing page
+    path === "/public-notes";
+
+  if (publicPages) {
     return NextResponse.next();
   }
 
+  // ==============================
   // 🔒 PROTECTED PAGES
+  // ==============================
   const protectedPages =
-    path === "/" ||
     path === "/dashboard" ||
     path === "/profile" ||
     path.startsWith("/notes");
 
   if (protectedPages && !token) {
     return NextResponse.redirect(
-      new URL("/login", request.nextUrl)
+      new URL("/login", request.url)
     );
   }
 
@@ -41,8 +51,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/",
-    "/dashboard",
-    "/profile",
+    "/dashboard/:path*",
+    "/profile/:path*",
     "/notes/:path*",
     "/login",
     "/signup",

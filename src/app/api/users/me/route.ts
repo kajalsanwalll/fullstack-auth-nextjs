@@ -5,21 +5,29 @@ import { connect } from "@/dbConfig/dbConfig";
 
 connect();
 
-export async function GET(request:NextRequest){
-    try {
-        
-        const userId = await getDataFromToken(request);
-        const user = await User.findOne({_id: userId}).
-        select("-password -isAdmin");
-        return NextResponse.json({
-            message: "User found!",
-            data:user
-        })
+export async function GET(request: NextRequest) {
+  try {
+    const userId = getDataFromToken(request);
 
-    } catch (error:any) {
-        return NextResponse.json({
-            error: error.message,
-            status:400
-        });
+    const user = await User.findById(userId)
+      .select("-password -isAdmin");
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 401 }
+      );
     }
+
+    return NextResponse.json({
+      success: true,
+      message: "User found!",
+      data: user,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 } // 🔥 THIS IS THE IMPORTANT FIX
+    );
+  }
 }
