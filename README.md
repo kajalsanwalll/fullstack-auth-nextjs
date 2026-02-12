@@ -3,7 +3,7 @@
 A full-stack Notes application built with Next.js 14 (App Router), MongoDB, and JWT authentication, where users can create notes and request them to be made public — but only an admin can approve or reject them.
 
 🚀 Features
---
+---
 👤 Authentication
 
 User Signup & Login  
