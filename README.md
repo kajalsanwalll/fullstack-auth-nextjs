@@ -4,6 +4,7 @@ A full-stack Notes application built with Next.js 14 (App Router), MongoDB, and 
 
 Demo: [link](https://www.linkedin.com/feed/update/urn:li:activity:7439526895756496896/)
 Live site: [link](https://notesphere-kohl.vercel.app)
+
 🚀 Features
 ---
 👤 Authentication
