@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Notes App",
+  title: "Notesphere",
   description: "Modern fullstack notes application",
+  icons: {
+    icon: "/favicon.png", 
+  },
 };
 
 export default function RootLayout({
