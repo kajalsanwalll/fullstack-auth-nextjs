@@ -3,7 +3,7 @@
 A full-stack Notes application built with Next.js 14 (App Router), MongoDB, and JWT authentication, where users can create notes and request them to be made public — but only an admin can approve or reject them.
 
 Demo: [link](https://www.linkedin.com/feed/update/urn:li:activity:7439526895756496896/).  
-Live site: [link](https://notesphere-kohl.vercel.app)
+Live site: [link](https://notesphere-jghzprmao-kajal-sanwals-projects.vercel.app)
 
 🚀 Features
 ---
