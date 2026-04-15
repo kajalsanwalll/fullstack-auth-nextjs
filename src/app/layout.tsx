@@ -13,10 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Notesphere",
+  title: "notesphere",
   description: "Modern fullstack notes application",
   icons: {
-    icon: "/src/app/favicon.png", 
+    icon: "/src/app/favicon.ico", 
   },
 };
 
