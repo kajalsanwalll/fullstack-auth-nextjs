@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Notesphere",
   description: "Modern fullstack notes application",
   icons: {
-    icon: "/favicon.png", 
+    icon: "/src/app/favicon.png", 
   },
 };
 
