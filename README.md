@@ -146,8 +146,6 @@ Deploy
 
 🖼️ Image upload crop support
 
-🔎 Search functionality
-
 🌙 Dark mode
 
 🎯 Purpose
