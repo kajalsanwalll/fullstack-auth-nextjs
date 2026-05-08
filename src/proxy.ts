@@ -5,9 +5,8 @@ export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get("token")?.value || "";
 
-  // ==============================
-  // ✅ AUTH PAGES
-  // ==============================
+
+  // AUTH PAGES
   const authPages =
     path === "/login" ||
     path === "/signup" ||
@@ -20,9 +19,9 @@ export function proxy(request: NextRequest) {
     );
   }
 
-  // ==============================
-  // ✅ PUBLIC PAGES
-  // ==============================
+  
+  // PUBLIC PAGES
+  
   const publicPages =
     path === "/" ||            // landing page
     path === "/public-notes";
@@ -31,9 +30,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // ==============================
-  // 🔒 PROTECTED PAGES
-  // ==============================
+  // PROTECTED PAGES
+  
   const protectedPages =
     path === "/dashboard" ||
     path === "/profile" ||
