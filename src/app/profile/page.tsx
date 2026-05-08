@@ -17,6 +17,7 @@ type User = {
   avatar?: string;
   createdAt?: string;
   isAdmin?: boolean;
+  isVerified?: boolean;
 };
 
 type PendingNote = {
@@ -179,6 +180,38 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+        {/* EMAIL VERIFICATION */}
+{!user.isVerified && (
+  <div className="mt-8 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-5">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+      <div>
+        <h2 className="text-lg font-semibold text-yellow-300">
+          Verify your email
+        </h2>
+
+        <p className="text-sm text-yellow-100/70 mt-1">
+          Your account is currently unverified.
+        </p>
+      </div>
+
+      <button
+        onClick={async () => {
+          try {
+            await axios.post("/api/users/resend-verification");
+            toast.success("Verification email sent ✨");
+          } catch {
+            toast.error("Failed to send verification email");
+          }
+        }}
+        className="rounded-xl bg-yellow-400 px-5 py-3 font-medium text-black hover:bg-yellow-300 transition"
+      >
+        Verify Now
+      </button>
+
+    </div>
+  </div>
+)}
 
         {/* USER INFO */}
         <div className="mt-10 grid gap-4 text-sm">

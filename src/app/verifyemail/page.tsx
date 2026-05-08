@@ -20,7 +20,8 @@ export default function VerifyEmailPage() {
   };
 
   useEffect(() => {
-    const urlToken = window.location.search.split("=")[1];
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get("token");
     setToken(urlToken || "");
   }, []);
 
