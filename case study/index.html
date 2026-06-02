@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Notesphere — Case Study</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --purple: #7c5cfc;
+    --purple-dim: rgba(124,92,252,0.15);
+    --purple-glow: rgba(124,92,252,0.08);
+    --pink: #e040a0;
+    --teal: #00c9a7;
+    --amber: #f5a623;
+    --coral: #ff6b6b;
+    --text: #e8e6f0;
+    --muted: #7a7888;
+    --muted2: #4a4858;
+    font-size: 16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* AMBIENT GLOW */
+  .ambient {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ambient-1 { width: 600px; height: 600px; top: -200px; left: -100px; background: rgba(124,92,252,0.12); }
+  .ambient-2 { width: 400px; height: 400px; bottom: 200px; right: -100px; background: rgba(224,64,160,0.08); }
+  .ambient-3 { width: 300px; height: 300px; top: 60%; left: 40%; background: rgba(0,201,167,0.05); }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 32px 120px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--purple);
+    background: var(--purple-dim);
+    border: 1px solid rgba(124,92,252,0.3);
+    padding: 5px 12px; border-radius: 4px;
+    margin-bottom: 28px;
+  }
+
+  .hero-tag::before { content: '◈'; font-size: 10px; }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(42px, 7vw, 72px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 17px; color: var(--muted); max-width: 580px; line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .hero-meta {
+    display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px;
+  }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    padding: 5px 10px; border-radius: 4px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    background: var(--surface);
+  }
+
+  .pill.tech { color: var(--teal); border-color: rgba(0,201,167,0.25); background: rgba(0,201,167,0.06); }
+  .pill.role { color: var(--amber); border-color: rgba(245,166,35,0.25); background: rgba(245,166,35,0.06); }
+
+  /* ── SECTION ── */
+  .section { margin-top: 72px; }
+
+  .section-label {
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted2); margin-bottom: 28px;
+  }
+
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px; font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px; color: #fff;
+  }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 600;
+    color: var(--text); margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  p { color: var(--muted); font-size: 15px; line-height: 1.75; margin-bottom: 14px; }
+  p:last-child { margin-bottom: 0; }
+  p strong { color: var(--text); font-weight: 500; }
+
+  /* ── ARCH GRID ── */
+  .arch-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .arch-cell {
+    background: var(--surface);
+    padding: 20px 22px;
+    transition: background 0.2s;
+  }
+
+  .arch-cell:hover { background: var(--surface2); }
+
+  .arch-cell .layer {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .arch-cell .tech-name {
+    font-family: 'Syne', sans-serif; font-size: 18px;
+    font-weight: 700; color: #fff; margin-bottom: 4px;
+  }
+
+  .arch-cell p { font-size: 13px; margin: 0; }
+
+  .layer.frontend { color: var(--purple); }
+  .layer.backend   { color: var(--teal); }
+  .layer.data      { color: var(--amber); }
+  .layer.infra     { color: var(--coral); }
+  .layer.auth      { color: var(--pink); }
+
+  /* ── Q&A CARDS ── */
+  .qa-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .qa-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .qa-item:hover { border-color: var(--border2); }
+  .qa-item.open  { border-color: rgba(124,92,252,0.3); }
+
+  .qa-q {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 18px 20px; cursor: pointer;
+    user-select: none;
+  }
+
+  .qa-q:hover { background: var(--surface2); }
+
+  .qa-num {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: var(--muted2); padding-top: 3px; min-width: 22px;
+    flex-shrink: 0;
+  }
+
+  .qa-text {
+    font-size: 14px; font-weight: 500; color: var(--text); flex: 1; line-height: 1.5;
+  }
+
+  .qa-arrow {
+    width: 16px; height: 16px; flex-shrink: 0;
+    margin-top: 2px; color: var(--muted2);
+    transition: transform 0.25s; font-size: 12px;
+  }
+
+  .qa-item.open .qa-arrow { transform: rotate(90deg); color: var(--purple); }
+
+  .qa-a {
+    display: none; padding: 0 20px 20px 56px;
+  }
+
+  .qa-item.open .qa-a { display: block; }
+
+  .qa-a p { font-size: 14px; }
+
+  .qa-a code {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 2px 6px; border-radius: 3px; color: var(--teal);
+  }
+
+  .qa-a .answer-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--purple); margin-bottom: 10px;
+  }
+
+  .qa-a ul {
+    list-style: none; margin: 8px 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  .qa-a ul li {
+    font-size: 14px; color: var(--muted); padding-left: 16px; position: relative; line-height: 1.6;
+  }
+
+  .qa-a ul li::before {
+    content: '▸'; position: absolute; left: 0; color: var(--purple); font-size: 10px; top: 4px;
+  }
+
+  .qa-a ul li strong { color: var(--text); font-weight: 500; }
+
+  /* ── CATEGORY BADGE ── */
+  .cat-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px; margin-right: 8px; margin-bottom: 4px;
+  }
+
+  .cat-badge.design   { background: rgba(124,92,252,0.15); color: var(--purple); border: 1px solid rgba(124,92,252,0.2); }
+  .cat-badge.perf     { background: rgba(0,201,167,0.1);   color: var(--teal);   border: 1px solid rgba(0,201,167,0.2); }
+  .cat-badge.scale    { background: rgba(245,166,35,0.1);  color: var(--amber);  border: 1px solid rgba(245,166,35,0.2); }
+  .cat-badge.security { background: rgba(255,107,107,0.1); color: var(--coral);  border: 1px solid rgba(255,107,107,0.2); }
+  .cat-badge.trade    { background: rgba(224,64,160,0.1);  color: var(--pink);   border: 1px solid rgba(224,64,160,0.2); }
+
+  /* ── TRADEOFF TABLE ── */
+  .tradeoff {
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin-top: 8px;
+  }
+
+  .tradeoff-row {
+    display: grid; grid-template-columns: 140px 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tradeoff-row:last-child { border-bottom: none; }
+
+  .tradeoff-row.header { background: var(--surface2); }
+
+  .tradeoff-cell {
+    padding: 12px 16px; font-size: 13px;
+    border-right: 1px solid var(--border);
+  }
+
+  .tradeoff-cell:last-child { border-right: none; }
+  .tradeoff-row.header .tradeoff-cell {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted2);
+  }
+
+  .tradeoff-cell .chosen { color: var(--teal); font-weight: 500; }
+  .tradeoff-cell .alt    { color: var(--muted); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0;
+    margin: 16px 0;
+  }
+
+  .flow-node {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 8px 14px;
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text);
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    color: var(--muted2); font-size: 14px; padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight {
+    border-left: 2px solid var(--purple);
+    background: var(--purple-glow);
+    padding: 14px 18px; border-radius: 0 8px 8px 0;
+    margin: 14px 0;
+  }
+
+  .highlight p { font-size: 14px; margin: 0; }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 80px; padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: gap;
+  }
+
+  .footer-left { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2); }
+  .footer-right { font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 0 18px 80px; }
+    .arch-grid { grid-template-columns: 1fr; }
+    .tradeoff-row { grid-template-columns: 100px 1fr 1fr; }
+    h1 { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+<div class="ambient ambient-3"></div>
+
+<div class="wrap">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-tag">SDE Interview Case Study</div>
+    <h1>Notes<span>phere</span></h1>
+    <p class="hero-sub">A full-stack notes platform with public sharing, image uploads, admin moderation, and PDF export — built as a production-ready web app.</p>
+    <div class="hero-meta">
+      <span class="pill tech">Next.js 14</span>
+      <span class="pill tech">TypeScript</span>
+      <span class="pill tech">MongoDB</span>
+      <span class="pill tech">Cloudinary</span>
+      <span class="pill tech">JWT Auth</span>
+      <span class="pill role">Solo project</span>
+      <span class="pill role">Full-stack</span>
+    </div>
+  </div>
+
+  <!-- ── PROJECT OVERVIEW ── -->
+  <div class="section">
+    <div class="section-label">01 — Overview</div>
+    <h2>What is Notesphere?</h2>
+    <p>Notesphere is a full-stack note-taking application where users can create rich notes with text and images, pin important ones, toggle visibility between private and public, and download notes as PDFs. Public notes go through an <strong>admin moderation queue</strong> before appearing publicly, preventing spam and abuse.</p>
+    <p>The app uses a <strong>unified Next.js codebase</strong> — both the React frontend and the REST API live in the same repo using Next.js App Router API routes, eliminating the need for a separate backend server.</p>
+  </div>
+
+  <!-- ── ARCHITECTURE ── -->
+  <div class="section">
+    <div class="section-label">02 — Architecture</div>
+    <h2>Tech stack breakdown</h2>
+
+    <div class="arch-grid">
+      <div class="arch-cell">
+        <div class="layer frontend">Frontend</div>
+        <div class="tech-name">Next.js 14 + React</div>
+        <p>App Router, client components, file-based routing. <code>axios</code> for HTTP, <code>react-hot-toast</code> for notifications.</p>
+      </div>
+      <div class="arch-cell">
+        <div class="layer backend">API Layer</div>
+        <div class="tech-name">Next.js Route Handlers</div>
+        <p>REST endpoints under <code>/api/users/</code> and <code>/api/admin/</code>. Same process as the frontend — no separate Express server.</p>
+      </div>
+      <div class="arch-cell">
+        <div class="layer data">Database</div>
+        <div class="tech-name">MongoDB + Mongoose</div>
+        <p>Document model fits notes (variable fields, embedded images array). Mongoose for schema validation and querying.</p>
+      </div>
+      <div class="arch-cell">
+        <div class="layer auth">Auth</div>
+        <div class="tech-name">JWT + HTTP-only Cookies</div>
+        <p>Stateless auth. Tokens stored in HTTP-only cookies — not localStorage — to prevent XSS token theft.</p>
+      </div>
+      <div class="arch-cell">
+        <div class="layer infra">File Storage</div>
+        <div class="tech-name">Cloudinary</div>
+        <p>Images uploaded via <code>/api/users/upload</code>, stored on Cloudinary CDN. URLs saved in the note document.</p>
+      </div>
+      <div class="arch-cell">
+        <div class="layer infra">Export</div>
+        <div class="tech-name">html2pdf.js</div>
+        <p>Client-side PDF generation from note HTML. No server involvement — runs entirely in the browser.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── REQUEST FLOW ── -->
+  <div class="section">
+    <div class="section-label">03 — Data Flow</div>
+    <h2>Request lifecycle</h2>
+    <p>When a logged-in user creates a note with an image:</p>
+    <div class="flow">
+      <div class="flow-node">Browser</div><div class="flow-arrow">→</div>
+      <div class="flow-node">/api/users/upload</div><div class="flow-arrow">→</div>
+      <div class="flow-node">Cloudinary CDN</div><div class="flow-arrow">→</div>
+      <div class="flow-node">URL returned</div><div class="flow-arrow">→</div>
+      <div class="flow-node">/api/users/notes POST</div><div class="flow-arrow">→</div>
+      <div class="flow-node">MongoDB</div>
+    </div>
+    <p style="margin-top:12px">When a user sets a note to public, it enters a <strong>pending</strong> state. An admin calls <code>/api/admin/approve-note</code> or <code>/api/admin/reject-note</code> to moderate it before it appears on <code>/public-notes</code>.</p>
+    <div class="highlight"><p>Auth check: every protected API route reads the JWT from the <code>HttpOnly</code> cookie, verifies it with the secret, and extracts <code>userId</code>. Ownership checks compare <code>req.userId</code> against <code>note.user._id</code> before allowing edits or deletes.</p></div>
+  </div>
+
+  <!-- ── TECH TRADEOFFS ── -->
+  <div class="section">
+    <div class="section-label">04 — Trade-off Analysis</div>
+    <h2>Why this stack, not that?</h2>
+
+    <div class="tradeoff">
+      <div class="tradeoff-row header">
+        <div class="tradeoff-cell">Decision</div>
+        <div class="tradeoff-cell">Chosen</div>
+        <div class="tradeoff-cell">Alternatives considered</div>
+      </div>
+      <div class="tradeoff-row">
+        <div class="tradeoff-cell" style="font-size:12px;color:var(--muted)">Framework</div>
+        <div class="tradeoff-cell"><span class="chosen">Next.js App Router</span><br><span style="font-size:12px;color:var(--muted)">Unified frontend + API, SSR ready, no CORS config</span></div>
+        <div class="tradeoff-cell"><span class="alt">React + Express — two repos, separate deployment, more ops overhead for a solo project</span></div>
+      </div>
+      <div class="tradeoff-row">
+        <div class="tradeoff-cell" style="font-size:12px;color:var(--muted)">Database</div>
+        <div class="tradeoff-cell"><span class="chosen">MongoDB</span><br><span style="font-size:12px;color:var(--muted)">Schema-flexible, images as string arrays, fast dev iteration</span></div>
+        <div class="tradeoff-cell"><span class="alt">PostgreSQL — better for relational queries and joins, but notes have variable structure and no complex relations</span></div>
+      </div>
+      <div class="tradeoff-row">
+        <div class="tradeoff-cell" style="font-size:12px;color:var(--muted)">Auth</div>
+        <div class="tradeoff-cell"><span class="chosen">Custom JWT</span><br><span style="font-size:12px;color:var(--muted)">Full control, no vendor dependency, works with HTTP-only cookies</span></div>
+        <div class="tradeoff-cell"><span class="alt">NextAuth / Clerk — simpler OAuth setup, but adds abstraction; overkill for email+password only</span></div>
+      </div>
+      <div class="tradeoff-row">
+        <div class="tradeoff-cell" style="font-size:12px;color:var(--muted)">Image storage</div>
+        <div class="tradeoff-cell"><span class="chosen">Cloudinary</span><br><span style="font-size:12px;color:var(--muted)">Free tier, auto-CDN, image transformations built-in</span></div>
+        <div class="tradeoff-cell"><span class="alt">AWS S3 — more control and cheaper at scale, but requires more IAM/infra setup; overkill for MVP</span></div>
+      </div>
+      <div class="tradeoff-row">
+        <div class="tradeoff-cell" style="font-size:12px;color:var(--muted)">PDF export</div>
+        <div class="tradeoff-cell"><span class="chosen">html2pdf.js (client)</span><br><span style="font-size:12px;color:var(--muted)">Zero server load, no file storage needed</span></div>
+        <div class="tradeoff-cell"><span class="alt">Puppeteer/server-side — pixel-perfect rendering but adds server cost and latency per export</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FAANG Q&A ── -->
+  <div class="section">
+    <div class="section-label">05 — Interview Questions</div>
+    <h2>Questions you'll be asked</h2>
+    <p style="margin-bottom:24px">Click to expand each answer. These are real questions asked at Google, Meta, Amazon, and similar companies about full-stack projects.</p>
+
+    <div class="qa-list" id="qaList">
+
+      <!-- Q1 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">01</span>
+          <span class="qa-text"><span class="cat-badge design">Design</span>Walk me through the architecture of your application.</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p>Notesphere is a full-stack app built on Next.js 14 using the App Router. The frontend is React with client-side state — no SSR for authenticated pages since data is user-specific. The backend is a set of Next.js Route Handlers that serve as REST endpoints, connected to MongoDB via Mongoose for persistence and Cloudinary for image storage.</p>
+          <p>Auth uses stateless JWTs stored in HTTP-only cookies. The app has two user roles: regular users who create and manage their own notes, and admins who moderate notes before they go public. Everything is deployed as one Next.js project — no separate backend service.</p>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">02</span>
+          <span class="qa-text"><span class="cat-badge security">Security</span>Why HTTP-only cookies for JWT instead of localStorage?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p><strong>localStorage is vulnerable to XSS.</strong> Any injected JavaScript can read <code>localStorage.getItem('token')</code> and exfiltrate the JWT. HTTP-only cookies cannot be read by JavaScript at all — they're only sent by the browser on matching requests.</p>
+          <ul>
+            <li><strong>HTTP-only</strong> — inaccessible via <code>document.cookie</code>, blocks XSS token theft</li>
+            <li><strong>Secure flag</strong> — only sent over HTTPS in production</li>
+            <li><strong>SameSite=Strict</strong> — mitigates CSRF by blocking cross-site cookie sending</li>
+          </ul>
+          <p>The trade-off is that cookies are automatically sent on every request (even ones that don't need auth), and you need to handle CSRF more carefully. But for a web app with a same-origin API, this is the correct choice.</p>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">03</span>
+          <span class="qa-text"><span class="cat-badge scale">Scalability</span>How would this handle 1 million users? Where are the bottlenecks?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p>Current bottlenecks and how I'd address them:</p>
+          <ul>
+            <li><strong>Database:</strong> MongoDB Atlas auto-scales reads with replica sets. For 1M users I'd add indexes on <code>notes.user</code>, <code>notes.isPublic</code>, and <code>notes.isPinned</code>. The public notes feed would need pagination (cursor-based, not offset) to avoid full collection scans.</li>
+            <li><strong>Image uploads:</strong> Currently synchronous — user waits for Cloudinary. At scale I'd move uploads to a background job queue (e.g. BullMQ + Redis) and return a presigned URL for direct browser-to-Cloudinary upload, removing the API server from the upload path entirely.</li>
+            <li><strong>API layer:</strong> Next.js serverless functions scale horizontally on Vercel/AWS. But JWT verification on every request adds CPU cost — I'd add Redis-based token caching or switch to a dedicated auth service.</li>
+            <li><strong>PDF export:</strong> Currently client-side (no server cost). This is actually a good scalability decision — it doesn't scale with users at all since it runs on their device.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">04</span>
+          <span class="qa-text"><span class="cat-badge trade">Trade-offs</span>Why MongoDB over PostgreSQL for this use case?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p>Notes are a good fit for documents because the schema is variable — a note might have 0 images, 5 images, or just text. In SQL, images would be a separate <code>note_images</code> table requiring a JOIN on every note fetch. In MongoDB, images are an embedded array — one read, no join.</p>
+          <p>However, I'd acknowledge trade-offs: if I needed complex queries like "all public notes by users who signed up in the last 30 days with more than 10 notes", MongoDB's aggregation pipeline is verbose compared to SQL. For this app's query patterns (find by user, find by public status, search by text), MongoDB is a clean fit.</p>
+          <div class="highlight"><p><strong>Key insight to mention:</strong> The choice isn't "MongoDB is better" — it's "MongoDB fits this data shape and these query patterns." Always frame DB decisions around access patterns, not personal preference.</p></div>
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">05</span>
+          <span class="qa-text"><span class="cat-badge design">Design</span>How does the admin moderation system work? How would you prevent a malicious user from bypassing it?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p>When a user toggles a note to public, it enters a <code>pending</code> state in the database. The <code>/public-notes</code> endpoint only returns notes where <code>isPublic: true AND status: 'approved'</code>. The admin endpoints <code>/api/admin/approve-note</code> and <code>/api/admin/reject-note</code> are protected by a middleware check that verifies <code>user.isAdmin === true</code> from the JWT payload.</p>
+          <p>Bypass vectors and mitigations:</p>
+          <ul>
+            <li><strong>Direct API call with forged token:</strong> JWT is signed with a server secret — you can't forge it without the secret</li>
+            <li><strong>Privilege escalation:</strong> The <code>isAdmin</code> flag is set server-side only, never in a user-controlled field</li>
+            <li><strong>Race condition:</strong> The approval is a single atomic MongoDB write with a status check — no TOCTOU window</li>
+            <li><strong>Improvement I'd add:</strong> Rate limiting on note creation to prevent spam flooding the moderation queue</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">06</span>
+          <span class="qa-text"><span class="cat-badge perf">Performance</span>The public notes page fetches all public notes at once. How would you fix this?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p>Yes, this is a real issue. Currently <code>/api/users/public-notes</code> returns the entire collection. With thousands of public notes this is slow and sends way more data than the browser needs.</p>
+          <p>I'd implement cursor-based pagination:</p>
+          <ul>
+            <li>API accepts <code>?cursor=lastNoteId&limit=20</code></li>
+            <li>Query: <code>Note.find(&#123; isPublic: true, _id: &#123; $gt: cursor &#125; &#125;).limit(20)</code></li>
+            <li>Response includes <code>nextCursor</code> for the next page</li>
+            <li>Frontend uses an <strong>Intersection Observer</strong> to trigger the next fetch as the user scrolls near the bottom (infinite scroll)</li>
+          </ul>
+          <p>I'd also add a <strong>search index</strong> in MongoDB on <code>title</code> and <code>content</code> fields using MongoDB Atlas Search (built on Lucene) so the text search doesn't do a full collection scan on every keystroke — debounced server-side search instead of client-side filtering.</p>
+        </div>
+      </div>
+
+      <!-- Q7 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">07</span>
+          <span class="qa-text"><span class="cat-badge security">Security</span>What are the security vulnerabilities in this app, and how would you fix them?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <ul>
+            <li><strong>No rate limiting:</strong> The login endpoint is open to brute-force attacks. Fix: add <code>express-rate-limit</code> or Vercel's edge rate limiting — e.g. max 5 login attempts per IP per 15 minutes.</li>
+            <li><strong>Image URL injection:</strong> Notes accept user-supplied image URLs with no validation. A malicious user could point to a tracking pixel or SSRF vector. Fix: validate URLs against an allowlist of domains, or only allow uploads (not arbitrary URLs).</li>
+            <li><strong>Missing CSRF protection:</strong> HTTP-only cookies prevent JS theft but not CSRF. Fix: verify the <code>Origin</code> header or use a CSRF token on state-changing requests.</li>
+            <li><strong>No input sanitisation on note content:</strong> If note content is ever rendered as HTML (e.g. for PDF export), it could be an XSS vector. Fix: sanitise with <code>DOMPurify</code> before rendering.</li>
+            <li><strong>Empty catch blocks:</strong> Several API routes swallow errors silently. This masks bugs and could leak server info. Fix: centralised error handler with structured logging.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q8 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">08</span>
+          <span class="qa-text"><span class="cat-badge design">Design</span>How would you add real-time collaborative editing to notes?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p>Collaborative editing is an <strong>operational transformation (OT)</strong> or <strong>CRDT</strong> problem. Two approaches:</p>
+          <ul>
+            <li><strong>Simple (presence + last-write-wins):</strong> WebSocket via Socket.io. Server broadcasts keystrokes, last writer wins. Fast to build, breaks with concurrent edits.</li>
+            <li><strong>Proper (CRDT):</strong> Use <strong>Yjs</strong> — a production CRDT library. Each client maintains a local document, changes are merged conflict-free. Yjs + WebSocket provider gives Google Docs-like behaviour.</li>
+          </ul>
+          <p>Infrastructure change: Next.js serverless functions don't support persistent WebSocket connections. I'd need a separate WebSocket server (Node.js + Socket.io on a long-lived instance) or use a managed service like <strong>Liveblocks</strong> or <strong>Ably</strong>.</p>
+          <div class="highlight"><p>This is a good answer because it shows awareness of the CAP theorem implication — you're trading consistency for availability in the collaborative case, and CRDTs are the principled solution.</p></div>
+        </div>
+      </div>
+
+      <!-- Q9 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">09</span>
+          <span class="qa-text"><span class="cat-badge perf">Performance</span>How would you improve the Time to First Byte and Core Web Vitals?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <ul>
+            <li><strong>Currently all client-side rendered.</strong> Dashboard, public notes, and note detail pages could be Server Components — data fetched on the server before HTML is sent, eliminating the loading spinner + subsequent API call pattern.</li>
+            <li><strong>Public notes page</strong> is a great candidate for <code>generateStaticParams</code> + ISR (Incremental Static Regeneration) — rebuild every 60 seconds. Public content doesn't change per-user.</li>
+            <li><strong>Images:</strong> Use Next.js <code>&lt;Image&gt;</code> component for automatic WebP conversion, lazy loading, and size optimisation. Currently using raw <code>&lt;img&gt;</code> tags.</li>
+            <li><strong>Bundle size:</strong> <code>html2pdf.js</code> is only needed on the note detail page — import it dynamically with <code>await import('html2pdf.js')</code> (already done, good) to avoid bloating the initial bundle.</li>
+            <li><strong>Fonts:</strong> Add <code>font-display: swap</code> and preconnect to Google Fonts to reduce render-blocking.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q10 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">10</span>
+          <span class="qa-text"><span class="cat-badge trade">Trade-offs</span>Why use Next.js API routes instead of a dedicated backend like Express or FastAPI?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p><strong>For this scale and team size (solo), co-location wins.</strong> Benefits of Next.js route handlers: one repo, one deployment, no CORS configuration, shared TypeScript types between frontend and API, zero cold-start penalty on Vercel.</p>
+          <p>The trade-offs I'd acknowledge:</p>
+          <ul>
+            <li><strong>No persistent state:</strong> Serverless functions can't hold WebSocket connections or in-memory caches between requests</li>
+            <li><strong>Cold starts:</strong> Infrequently hit routes on Vercel's free tier can have 200-500ms cold starts</li>
+            <li><strong>Vendor lock-in risk:</strong> Next.js route handlers have Vercel-specific behaviour (streaming, edge runtime)</li>
+          </ul>
+          <p>If this were a team of 5+ with separate frontend and backend engineers, or if the API needed WebSockets or heavy background processing, I'd extract the backend into a dedicated Express or NestJS service with its own deployment pipeline.</p>
+        </div>
+      </div>
+
+      <!-- Q11 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">11</span>
+          <span class="qa-text"><span class="cat-badge scale">Scalability</span>How would you implement search across notes efficiently at scale?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p>Current implementation: client-side <code>Array.filter()</code> on already-fetched notes. This breaks at scale for two reasons — it fetches everything first, and it can't search notes the user hasn't loaded.</p>
+          <p>Production approach, in order of complexity:</p>
+          <ul>
+            <li><strong>Level 1 — MongoDB text index:</strong> <code>db.notes.createIndex(&#123; title: "text", content: "text" &#125;)</code>. Supports full-text search server-side. Good up to ~10M notes.</li>
+            <li><strong>Level 2 — MongoDB Atlas Search:</strong> Lucene-powered, supports fuzzy matching, typo tolerance, relevance scoring. Drop-in for most use cases.</li>
+            <li><strong>Level 3 — Elasticsearch / OpenSearch:</strong> Dedicated search cluster for serious scale. Supports faceted search, autocomplete, synonyms, and near-real-time indexing via a change-stream consumer from MongoDB.</li>
+          </ul>
+          <p>I'd also add debouncing on the search input (300ms) and cancel in-flight requests using <code>AbortController</code> to avoid result ordering issues.</p>
+        </div>
+      </div>
+
+      <!-- Q12 -->
+      <div class="qa-item">
+        <div class="qa-q">
+          <span class="qa-num">12</span>
+          <span class="qa-text"><span class="cat-badge design">Design</span>What would you do differently if you were starting this project again?</span>
+          <span class="qa-arrow">▶</span>
+        </div>
+        <div class="qa-a">
+          <span class="answer-tag">model answer</span>
+          <p>This is a reflection question — interviewers want to see self-awareness and engineering judgment, not just feature lists.</p>
+          <ul>
+            <li><strong>Server Components first:</strong> I'd design pages as React Server Components and opt into client interactivity only where needed, rather than making everything <code>"use client"</code> by default. This would improve initial load performance significantly.</li>
+            <li><strong>Centralised API client:</strong> Axios calls are scattered across components. I'd build a typed API client module (or use React Query / SWR) to centralise caching, error handling, and loading states — and eliminate duplicated <code>try/catch</code> blocks.</li>
+            <li><strong>Environment-driven config:</strong> Some API behaviours are hardcoded. I'd add a proper <code>config.ts</code> that reads from env vars so the app is 12-factor compliant.</li>
+            <li><strong>Testing from day one:</strong> No tests currently. I'd add Vitest unit tests for API route logic and Playwright E2E tests for the critical paths (create note, make public, admin approve).</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <div class="footer-left">notesphere / case-study / v1.0</div>
+    <div class="footer-right">Built by Kajal Sanwal</div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('qaList').addEventListener('click', function(e) {
+    const q = e.target.closest('.qa-q');
+    if (!q) return;
+    const item = q.closest('.qa-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.qa-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+</script>
+</body>
+</html>
