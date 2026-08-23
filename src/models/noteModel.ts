@@ -14,7 +14,7 @@ const noteSchema = new mongoose.Schema(
     },
 
     images: {
-      type: [String], // 🔥 image URLs
+      type: [String], //image URLs
       default: [],
     },
 
