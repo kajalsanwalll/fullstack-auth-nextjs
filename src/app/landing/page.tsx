@@ -37,13 +37,13 @@ export default function LandingPage() {
       {/* ================= HERO ================= */}
       <section className="min-h-[calc(100vh-88px)] flex flex-col items-center justify-center text-center px-6">
 
-        <div className="-mt-16">
+        <div className="flex flex-col -mt-16 items-center justify-center">
 
           <h2 className="text-5xl font-bold mb-6">
             Good notes shouldnt be a Senior&apos;s Secret.
           </h2>
 
-          <p className="max-w-xl text-purple-200 opacity-80 mb-8 leading-relaxed">
+          <p className="max-w-xl text-purple-200 opacity-80 mb-8 text-center leading-relaxed items-center justify-center">
             Notesphere helps you create structured notes with images,
             pin important ideas, and even publish them publicly.
             A smarter way to think digitally.
@@ -86,7 +86,7 @@ export default function LandingPage() {
           </p>
 
           <h3 className="text-3xl sm:text-4xl font-bold leading-tight mb-8">
-            I didn&apos;t have seniors when I joined university.
+            I didn&apos;t have seniors from my branch when I joined university.
           </h3>
 
           <div className="space-y-6 text-purple-100/70 leading-relaxed text-base sm:text-lg">
